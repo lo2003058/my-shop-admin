@@ -1,15 +1,16 @@
 'use client';
 
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import TitleComponent from '@/components/common/titleComponent';
 import ContainersComponent from '@/components/common/containersComponent';
-import { useQuery } from '@apollo/client';
+import { useMutation, useQuery } from '@apollo/client';
 import { GET_PRODUCTS_PAGINATED } from '@/graphql/products/queries';
-import { Product, ProductsData } from '@/types/product/types';
-import LoadingComponent from '@/components/common/loadingComponent';
-import DebugComponent from '@/components/common/debugComponent';
+import { EditProductData, Product, ProductsData } from '@/types/product/types';
 import { DataTableComponent, Field } from '@/components/common/dataTableComponent';
 import PaginationButtons from '@/components/common/paginationButtons';
+import ProductFormModal from '@/components/product/form/productFormModal';
+import { REMOVE_PRODUCT } from '@/graphql/products/mutation';
+import Swal from 'sweetalert2';
 
 const fields: Field<Product>[] = [
   { name: 'ID', key: 'id', type: 'text' },
@@ -21,15 +22,16 @@ const fields: Field<Product>[] = [
 ];
 
 const ProductPage: React.FC = () => {
-
-  // State
+  // For pagination & search
   const [page, setPage] = useState(1);
   const [searchTerm, setSearchTerm] = useState('');
-  const [products, setProducts] = useState<Product[]>([]);
-  const [totalPages, setTotalPages] = useState(1);
-  const pageSize = 4;
+  const [isModalOpen, setModalOpen] = useState(false);
+  const [editProduct, setEditProduct] = useState<EditProductData | null>(null);
+  // Page size config
+  const pageSize = 10;
 
-  const { data, loading, error, refetch } = useQuery<ProductsData>(
+  // GraphQL Query
+  const { data, error, refetch } = useQuery<ProductsData>(
     GET_PRODUCTS_PAGINATED,
     {
       variables: {
@@ -40,111 +42,132 @@ const ProductPage: React.FC = () => {
     },
   );
 
-  // On data update
-  useEffect(() => {
-    if (data?.productsV2) {
-      setProducts(data.productsV2.items);
-      setTotalPages(data.productsV2.totalPages);
-    }
-  }, [data]);
+  const [removeProduct] = useMutation(REMOVE_PRODUCT);
+
+  const refetchData = useCallback(
+    (newPage: number) => {
+      // Update page state
+      setPage(newPage);
+      // Trigger Apollo to fetch, but always render the DataTable
+      refetch({
+        page: newPage,
+        pageSize,
+        filter: { searchTerm },
+      }).catch((err) => console.error('Error fetching data:', err));
+    },
+    [pageSize, searchTerm, refetch],
+  );
+
+  const handleCloseModal = () => {
+    refetch().finally(() => setModalOpen(false));
+  };
+
+  const handleOpenModalForCreate = () => {
+    setEditProduct(null);
+    setModalOpen(true);
+  };
+
+  const handleOpenModalForEdit = (data: EditProductData) => {
+    setEditProduct(data);
+    setModalOpen(true);
+  };
+
+  // Handlers
+  const handleSearchChange = (value: string) => {
+    setSearchTerm(value);
+    setPage(1);
+  };
 
   const goToNextPage = useCallback(() => {
-    if (page >= totalPages) return;
-
-    const newPage = page + 1;
-    refetch({
-      page: newPage,
-      pageSize,
-      filter: { searchTerm },
-    })
-      .then((res) => {
-        if (res.data?.productsV2) {
-          setProducts(res.data.productsV2.items);
-          setTotalPages(res.data.productsV2.totalPages);
-          setPage(newPage);
-        }
-      })
-      .catch((err) => console.error('Error fetching next page:', err));
-  }, [page, totalPages, pageSize, searchTerm, refetch]);
+    const totalPages = data?.productsV2?.totalPages ?? 1;
+    if (page < totalPages) {
+      refetchData(page + 1);
+    }
+  }, [page, data, refetchData]);
 
   const goToPreviousPage = useCallback(() => {
-    if (page <= 1) return;
+    if (page > 1) {
+      refetchData(page - 1);
+    }
+  }, [page, refetchData]);
 
-    const newPage = page - 1;
-    refetch({
-      page: newPage,
-      pageSize,
-      filter: { searchTerm },
-    })
-      .then((res) => {
-        if (res.data?.productsV2) {
-          setProducts(res.data.productsV2.items);
-          setTotalPages(res.data.productsV2.totalPages);
-          setPage(newPage);
-        }
-      })
-      .catch((err) => console.error('Error fetching previous page:', err));
-  }, [page, pageSize, searchTerm, refetch]);
-
-  // Loading & Error
-  if (loading && !products.length) {
-    return (
-      <ContainersComponent>
-        <LoadingComponent />
-      </ContainersComponent>
-    );
-  }
-
+  // If error, show it, but keep the table unmounted
   if (error) {
     console.error(error);
     return (
-      <>
-        <ContainersComponent>
-          <p className="text-red-500">Error loading products.</p>
-        </ContainersComponent>
-      </>
+      <ContainersComponent>
+        <p className="text-red-500">Error loading products.</p>
+      </ContainersComponent>
     );
   }
 
+  // Decide how to grab products and total pages
+  const products = data?.productsV2?.items ?? [];
+  const totalPages = data?.productsV2?.totalPages ?? 1;
+
+  const handleDelete = async (item: Product) => {
+
+    await Swal.fire({
+      title: 'Delete Product',
+      text: 'Are you sure you want to delete this product?',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Delete',
+      confirmButtonColor: 'red',
+      cancelButtonText: 'Cancel',
+    }).then(async (result) => {
+        if (result.isConfirmed) {
+          await removeProduct({
+            variables: { id: item.id },
+          })
+            .then(async () => {
+              await Swal.fire({
+                position: 'center',
+                icon: 'success',
+                title: 'Deleted Successfully',
+                text: 'Product has been deleted.',
+                showConfirmButton: false,
+                timer: 1500,
+              });
+            })
+            .finally(() => {
+              refetch(); // or any other state update needed
+            });
+        }
+      },
+    );
+  };
+
   return (
-    <>
-      <ContainersComponent>
-        <TitleComponent
-          title="Product"
-          routeName={'product'}
-          isShowCreateButton
-        />
-        <DataTableComponent
-          data={products}
-          fields={fields}
-          onEdit={(data) => {
-            alert(`Editing: ${data.name}`);
-          }}
-          onDelete={(data) => {
-            alert(`Deleting: ${data.name}`);
-          }}
-          onView={(data) => {
-            alert(`Viewing: ${data.name}`);
-          }}
-          onSearchChange={(value) => {
-            setSearchTerm(value);
-          }}
-          isShowSearchBar
-          actionType={['view']}
-        />
-
-        {/* Pagination */}
-        <PaginationButtons
-          currentPage={page}
-          totalPages={totalPages}
-          onPrevPage={goToPreviousPage}
-          onNextPage={goToNextPage}
-        />
-
-      </ContainersComponent>
-    </>
-  )
-    ;
+    <ContainersComponent>
+      <TitleComponent
+        title="Product"
+        isShowCreateButton
+        createButtonOnClick={handleOpenModalForCreate}
+      />
+      <DataTableComponent
+        data={products}
+        fields={fields}
+        onEdit={(item) => handleOpenModalForEdit(item)}
+        onDelete={(item) => handleDelete(item)}
+        onView={(item) => alert(`Viewing: ${item.name}`)}
+        onSearchChange={handleSearchChange}
+        isShowSearchBar
+        actionType={['view', 'edit', 'delete']}
+      />
+      <PaginationButtons
+        currentPage={page}
+        totalPages={totalPages}
+        onPrevPage={goToPreviousPage}
+        onNextPage={goToNextPage}
+      />
+      <ProductFormModal
+        isOpen={isModalOpen}
+        onClose={handleCloseModal}
+        editProduct={editProduct}
+      />
+    </ContainersComponent>
+  );
 };
 
 export default ProductPage;

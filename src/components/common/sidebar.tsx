@@ -14,7 +14,8 @@ import Image from 'next/image';
 import { navigationRoute } from '@/config/navigationRoute';
 import Link from 'next/link';
 import Tooltip from '@/components/common/tooltip';
-import Breadcrumbs from '@/components/common/breadcrumbs';
+import Swal from 'sweetalert2';
+import { signOut } from 'next-auth/react';
 
 export default function SideBar() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -49,14 +50,27 @@ export default function SideBar() {
   const hasMultiplePages = navigationRoute.length > itemsPerPage;
 
   // Placeholder logout handler
-  const handleLogout = () => {
-    alert('Logged out!');
+  const handleLogout = async () => {
+    await Swal.fire({
+      title: 'Sign Out',
+      text: 'Are you sure you want to sign out?',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Sign Out',
+      confirmButtonColor: '#DC2626',
+      cancelButtonText: 'Cancel',
+      cancelButtonColor: '#374151',
+    }).then((result) => {
+      if (result.isConfirmed) {
+        signOut();
+      }
+    });
   };
 
   return (
     <>
       {/* MOBILE SIDEBAR (DIALOG) */}
-      <Dialog open={sidebarOpen} onClose={setSidebarOpen} className="relative z-50 lg:hidden">
+      <Dialog open={sidebarOpen} onClose={setSidebarOpen} className="relative z-10 lg:hidden">
         <DialogBackdrop
           transition
           className="fixed inset-0 bg-white transition-opacity duration-300 ease-linear data-[closed]:opacity-0"
@@ -154,7 +168,7 @@ export default function SideBar() {
 
       {/* DESKTOP SIDEBAR */}
       <div
-        className="border-r-2 hidden lg:fixed lg:inset-y-0 lg:left-0 lg:z-50 lg:block lg:w-20 lg:bg-white lg:ring-1 lg:ring-white/10"
+        className="border-r-2 hidden lg:fixed lg:inset-y-0 lg:left-0 lg:z-10 lg:block lg:w-20 lg:bg-white lg:ring-1 lg:ring-white/10"
       >
         <div className="flex h-full flex-col">
           {/* Logo */}

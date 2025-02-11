@@ -14,9 +14,6 @@ export type ActionType = 'edit' | 'delete' | 'view';
 
 /**
  * The definition of a single column/field in the table.
- * - `name` is the display name in the header.
- * - `key` is the key in your data object.
- * - `type` indicates how to render the field (text, number, image, boolean).
  */
 export interface Field<T> {
   name: string;
@@ -26,12 +23,6 @@ export interface Field<T> {
 
 /**
  * Props for the DataTable component.
- * - `data`: an array of data objects.
- * - `fields`: column definitions mapping to the data's keys.
- * - `onEdit`: optional callback if you want to handle row editing.
- * - `onDelete`: optional callback if you want to handle row deletion.
- * - `onView`: optional callback if you want to handle row viewing.
- * - `onSearchChange`: callback for the search bar; returns typed value to the parent.
  */
 interface DataTableProps<T> {
   data: T[];
@@ -52,6 +43,41 @@ function classNames(...classes: (string | boolean | undefined)[]) {
 }
 
 /**
+ * A helper for rendering cell value based on field type.
+ */
+function renderCellValue<T>(fieldType: ColumnType, value: T[keyof T]) {
+  switch (fieldType) {
+    case 'image':
+      return (
+        <Image
+          src={value ? String(value) : '/images/no-image-available.webp'}
+          alt="image"
+          className="h-10 w-10 object-cover rounded-full"
+          width={40}
+          height={40}
+          priority
+        />
+      );
+    case 'boolean':
+      return value ? (
+        <span
+          className="inline-flex items-center rounded-full bg-green-100 px-2 py-1 text-xs font-medium text-green-700"
+        >
+          True
+        </span>
+      ) : (
+        <span className="inline-flex items-center rounded-full bg-red-100 px-2 py-1 text-xs font-medium text-red-700"
+        >
+          False
+        </span>
+      );
+    // 'text' or 'number' can be displayed the same way
+    default:
+      return <span>{String(value)}</span>;
+  }
+}
+
+/**
  * A reusable DataTable component in TypeScript.
  */
 export function DataTableComponent<T extends object>(
@@ -66,24 +92,19 @@ export function DataTableComponent<T extends object>(
     isShowSearchBar = true,
   }: DataTableProps<T>,
 ) {
-  return (
-    <div className="px-4 sm:px-6 lg:px-8 py-6">
+  const hasActions = actionType.length > 0;
 
+  return (
+    <div className="py-6">
       {/* Search bar (full width) */}
-      {
-        isShowSearchBar && (
-          <input
-            type="text"
-            placeholder="Search..."
-            className="block w-full rounded-t-xl border-t border-l border-r border-gray-300 bg-white px-3 py-2 text-mdplaceholder-gray-600 focus:border-indigo-500 focus:outline-none focus:ring-indigo-500"
-            onChange={(e) => {
-              if (onSearchChange) {
-                onSearchChange(e.target.value);
-              }
-            }}
-          />
-        )
-      }
+      {isShowSearchBar && (
+        <input
+          type="text"
+          placeholder="Search..."
+          className="block w-full rounded-t-xl border-t border-l border-r border-gray-300 bg-white px-3 py-2 text-md placeholder-gray-600 focus:outline-none text-gray-800"
+          onChange={(e) => onSearchChange?.(e.target.value)}
+        />
+      )}
 
       {/* Table */}
       <div className="flow-root">
@@ -95,9 +116,8 @@ export function DataTableComponent<T extends object>(
               {fields.map((field, index) => {
                 const isFirst = index === 0;
                 const isLast = index === fields.length - 1;
-                const hasActions = actionType?.length > 0;
 
-                // Determine classes for the first <th>
+                // Dynamic classes for the first <th>
                 const firstThClasses = isFirst
                   ? classNames(
                     'border-l border-b border-gray-300 bg-white/75 px-3 py-3.5 text-left text-sm font-semibold text-gray-900 backdrop-blur backdrop-filter',
@@ -112,7 +132,7 @@ export function DataTableComponent<T extends object>(
                   )
                   : '';
 
-                // Determine classes for the last <th>
+                // Dynamic classes for the last <th>
                 const lastThClasses = isLast
                   ? classNames(
                     'border-b border-gray-300 bg-white/75 px-3 py-3.5 text-left text-sm font-semibold text-gray-900 backdrop-blur backdrop-filter',
@@ -132,9 +152,9 @@ export function DataTableComponent<T extends object>(
                     key={String(field.key)}
                     scope="col"
                     className={classNames(
-                      'sticky top-0 z-10 border-b border-gray-300 bg-white/75 px-3 py-3.5 text-left text-sm font-semibold text-gray-900 backdrop-blur backdrop-filter',
+                      'sticky top-0 z-60 border-b border-gray-300 bg-white/75 px-3 py-3.5 text-left text-sm font-semibold text-gray-900 backdrop-blur backdrop-filter',
                       isFirst ? firstThClasses : isLast ? lastThClasses : '',
-                      // Scenario 3: Add border-t to all <th> if isShowSearchBar is false
+                      // Add border-t to intermediate <th> if search bar is hidden
                       !isShowSearchBar && !isFirst && !isLast && 'border-t',
                     )}
                   >
@@ -144,14 +164,12 @@ export function DataTableComponent<T extends object>(
               })}
 
               {/* Actions Column */}
-              {actionType?.length > 0 && (
+              {hasActions && (
                 <th
                   scope="col"
                   className={classNames(
                     'sticky top-0 z-10 border-b border-r border-gray-300 bg-white/75 px-3 py-3.5 text-left text-sm font-semibold text-gray-900 backdrop-blur backdrop-filter',
-                    // Scenario 1: isShowSearchBar = false
                     !isShowSearchBar && 'border-t rounded-r-xl',
-                    // Scenario 4: isShowSearchBar = true
                     isShowSearchBar && 'rounded-br-xl',
                   )}
                 >
@@ -159,59 +177,33 @@ export function DataTableComponent<T extends object>(
                 </th>
               )}
             </tr>
-
             </thead>
 
             {/* Table Body */}
             <tbody>
-            {data.map((row, rowIndex) => {
-              const isLastRow = rowIndex === data.length - 1;
-              return (
-                <tr key={rowIndex}>
-                  {fields.map((field) => {
-                    const cellValue = row[field.key];
-                    return (
-                      <td
-                        key={String(field.key)}
-                        className={classNames(
-                          !isLastRow && 'border-b border-gray-200',
-                          'whitespace-nowrap px-3 py-4 text-sm text-gray-500',
-                        )}
-                      >
-                        {/* Render cell depending on the type */}
-                        {field.type === 'image' && (
-                          <Image
-                            src={String(cellValue)}
-                            alt={`${field.key as string}`}
-                            className="h-10 w-10 object-cover rounded-full"
-                            width={40}
-                            height={40}
-                          />
-                        )}
-                        {field.type === 'text' && (
-                          <span>{String(cellValue)}</span>
-                        )}
-                        {field.type === 'number' && (
-                          <span>{String(cellValue)}</span>
-                        )}
-                        {field.type === 'boolean' && (
-                          cellValue ? (
-                            <span
-                              className="inline-flex items-center rounded-full bg-green-100 px-2 py-1 text-xs font-medium text-green-700">
-                                  True
-                                </span>
-                          ) : (
-                            <span
-                              className="inline-flex items-center rounded-full bg-red-100 px-2 py-1 text-xs font-medium text-red-700">
-                                  False
-                                </span>
-                          )
-                        )}
-                      </td>
-                    );
-                  })}
-                  {
-                    actionType?.length > 0 && (
+            {data && data.length > 0 ? (
+              data.map((row, rowIndex) => {
+                const isLastRow = rowIndex === data.length - 1;
+
+                return (
+                  <tr key={rowIndex}>
+                    {fields.map((field) => {
+                      const cellValue = row[field.key];
+                      return (
+                        <td
+                          key={String(field.key)}
+                          className={classNames(
+                            !isLastRow && 'border-b border-gray-200',
+                            'whitespace-nowrap px-3 py-4 text-sm text-gray-500',
+                          )}
+                        >
+                          {renderCellValue(field.type, cellValue)}
+                        </td>
+                      );
+                    })}
+
+                    {/* Render action buttons if needed */}
+                    {hasActions && (
                       <td
                         className={classNames(
                           !isLastRow && 'border-b border-gray-200',
@@ -219,10 +211,10 @@ export function DataTableComponent<T extends object>(
                         )}
                       >
                         {actionType.includes('view') && (
-                          <Tooltip text="View" position={'bottom'}>
+                          <Tooltip text="View" position="bottom">
                             <div
                               className="flex items-center justify-center h-10 w-10 rounded-full hover:bg-gray-100 cursor-pointer"
-                              onClick={() => onView && onView(row)}
+                              onClick={() => onView?.(row)}
                             >
                               <Button className="text-black hover:bg-gray-100 hover:text-gray-700">
                                 <FontAwesomeIcon icon={faEye} />
@@ -231,10 +223,10 @@ export function DataTableComponent<T extends object>(
                           </Tooltip>
                         )}
                         {actionType.includes('edit') && (
-                          <Tooltip text="Edit" position={'bottom'}>
+                          <Tooltip text="Edit" position="bottom">
                             <div
                               className="flex items-center justify-center h-10 w-10 rounded-full hover:bg-gray-100 cursor-pointer"
-                              onClick={() => onEdit && onEdit(row)}
+                              onClick={() => onEdit?.(row)}
                             >
                               <Button className="text-black hover:bg-gray-100 hover:text-gray-700">
                                 <FontAwesomeIcon icon={faPen} />
@@ -243,10 +235,10 @@ export function DataTableComponent<T extends object>(
                           </Tooltip>
                         )}
                         {actionType.includes('delete') && (
-                          <Tooltip text="Delete" position={'bottom'}>
+                          <Tooltip text="Delete" position="bottom">
                             <div
                               className="flex items-center justify-center h-10 w-10 rounded-full hover:bg-gray-100 cursor-pointer"
-                              onClick={() => onDelete && onDelete(row)}
+                              onClick={() => onDelete?.(row)}
                             >
                               <Button className="text-black hover:bg-gray-100 hover:text-gray-700">
                                 <FontAwesomeIcon icon={faTrash} />
@@ -255,12 +247,20 @@ export function DataTableComponent<T extends object>(
                           </Tooltip>
                         )}
                       </td>
-                    )
-                  }
-                </tr>
-              );
-            })}
-
+                    )}
+                  </tr>
+                );
+              })
+            ) : (
+              <tr>
+                <td
+                  colSpan={fields.length + (hasActions ? 1 : 0)}
+                  className="px-3 py-4 text-center text-sm text-gray-500"
+                >
+                  No data found.
+                </td>
+              </tr>
+            )}
             </tbody>
           </table>
         </div>

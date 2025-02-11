@@ -2,23 +2,23 @@
 
 import React from 'react';
 import { useRouter } from 'next/navigation';
-import Link from 'next/link';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faArrowLeft, faPlus } from '@fortawesome/free-solid-svg-icons';
+import { Button } from '@headlessui/react';
 
 interface TitleProps {
   title: string;
-  routeName?: string;
   isShowBackButton?: boolean;
   isShowCreateButton?: boolean;
+  createButtonOnClick?: () => void;
 }
 
 const TitleComponent: React.FC<TitleProps> = (
   {
     title,
-    routeName,
     isShowBackButton = false,
     isShowCreateButton = false,
+    createButtonOnClick,
   }) => {
   const router = useRouter();
 
@@ -46,9 +46,9 @@ const TitleComponent: React.FC<TitleProps> = (
       </div>
 
       {/* Right Side: Create Button */}
-      {isShowCreateButton && routeName && (
-        <Link
-          href={`${routeName}/create`}
+      {isShowCreateButton && (
+        <Button
+          onClick={createButtonOnClick}
           className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none"
         >
           <FontAwesomeIcon
@@ -57,7 +57,7 @@ const TitleComponent: React.FC<TitleProps> = (
             aria-hidden="true"
           />
           Create
-        </Link>
+        </Button>
       )}
     </div>
   );

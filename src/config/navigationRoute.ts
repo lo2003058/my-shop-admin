@@ -6,6 +6,8 @@ import {
   faUserTie,
   faShop,
   faUsersRectangle,
+  faBrain,
+  faCalendarCheck,
 } from '@fortawesome/free-solid-svg-icons';
 import { IconDefinition } from '@fortawesome/fontawesome-svg-core';
 
@@ -52,6 +54,18 @@ const navigation: NavigationItem[] = [
     'key': 'tier',
     'href': '/tier',
     'icon': faUsersRectangle,
+  },
+  {
+    'name': 'Model',
+    'key': 'model',
+    'href': '/model',
+    'icon': faBrain,
+  },
+  {
+    'name': 'Action Log',
+    'key': 'action-log',
+    'href': '/action-log',
+    'icon': faCalendarCheck,
   },
   {
     'name': 'Setting',

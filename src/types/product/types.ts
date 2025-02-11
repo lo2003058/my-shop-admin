@@ -40,3 +40,22 @@ export interface ProductsData {
     totalPages: number;
   };
 }
+
+export interface EditProductData {
+  id: number;
+  name: string;
+  description: string;
+  price: number;
+  stock: number;
+  isVirtual: boolean;
+  imageUrl?: string;
+}
+
+export interface ProductData {
+  name: string;
+  description: string;
+  price: number;
+  stock: number;
+  isVirtual: boolean;
+  imageUrl?: string;
+}
