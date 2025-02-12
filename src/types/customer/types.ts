@@ -1,6 +1,6 @@
-import { IconDefinition } from "@fortawesome/fontawesome-svg-core";
-import { Tier } from "@/types/tier/types";
-import { Product } from "@/types/product/types";
+import { IconDefinition } from '@fortawesome/fontawesome-svg-core';
+import { Tier } from '@/types/tier/types';
+import { Product } from '@/types/product/types';
 
 export interface SecondaryNavigationItem {
   name: string;
@@ -55,6 +55,7 @@ export interface Customer {
   lastName: string;
   countryCode: string;
   phone: string;
+  status: number;
   customerPoints: CustomerPoints;
   tier: Tier;
   customerAddress?: CustomerAddress[];
@@ -101,4 +102,45 @@ export interface AddressFormData {
   country: string;
   zipCode: string;
   isDefault: boolean;
+}
+
+export interface CustomersData {
+  paginatedCustomer: {
+    items: Customer[];
+    totalCount: number;
+    currentPage: number;
+    pageSize: number;
+    totalPages: number;
+  };
+}
+
+export interface CustomerFormData {
+  email: string;
+  firstName: string;
+  lastName: string;
+  countryCode: string;
+  phone: string;
+  status: number;
+}
+
+export interface CustomerFormModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  editCustomer?: Customer | null;
+}
+
+export interface CustomerFormProps {
+  onSave: (serializedData: CustomerFormData) => Promise<void>;
+  initialData?: Partial<CustomerFormData>;
+  isEditMode?: boolean;
+}
+
+export interface CustomerViewModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  customerData?: Customer | null;
+}
+
+export interface CustomerViewProps {
+  customerData?: Partial<CustomerFormData>;
 }

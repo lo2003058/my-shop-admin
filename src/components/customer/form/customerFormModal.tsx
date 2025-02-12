@@ -1,39 +1,40 @@
-'use client';
-
 import React, { Fragment } from 'react';
-import { Transition, Dialog } from '@headlessui/react';
-
-import { ProductFormData, ProductFormModalProps } from '@/types/product/types';
+import { CustomerFormData, CustomerFormModalProps } from '@/types/customer/types';
+import { Dialog, Transition } from '@headlessui/react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faXmark } from '@fortawesome/free-solid-svg-icons';
-import ProductForm from '@/components/product/form/productForm';
-import Swal from 'sweetalert2';
 import { useMutation } from '@apollo/client';
-import { CREATE_PRODUCT, UPDATE_PRODUCT } from '@/graphql/products/mutation';
+import Swal from 'sweetalert2';
 import { GqlErrorMessage } from '@/types/error/types';
+import { CREATE_CUSTOMER, UPDATE_CUSTOMER } from '@/graphql/Customer/mutation';
+import { usePathname } from 'next/navigation';
+import _ from 'lodash';
+import CustomerForm from '@/components/customer/form/customerForm';
 
-const ProductFormModal: React.FC<ProductFormModalProps> = (
+const CustomerFormModal: React.FC<CustomerFormModalProps> = (
   {
     isOpen,
     onClose,
-    editProduct,
+    editCustomer,
   },
 ) => {
+  const rawPathname = usePathname();
+  const pathname = rawPathname.replace('/', '');
 
-  const isEditMode = Boolean(editProduct?.id);
+  const isEditMode = Boolean(editCustomer?.id);
 
   // Apollo Mutations
-  const [createProduct] = useMutation(CREATE_PRODUCT);
-  const [updateProduct] = useMutation(UPDATE_PRODUCT);
+  const [createCustomer] = useMutation(CREATE_CUSTOMER);
+  const [updateCustomer] = useMutation(UPDATE_CUSTOMER);
 
-  const handleSave = async (formData: ProductFormData) => {
+  const handleSave = async (formData: CustomerFormData) => {
     try {
-      if (isEditMode && editProduct?.id) {
+      if (isEditMode && editCustomer?.id) {
         // Update
-        await updateProduct({
+        await updateCustomer({
           variables: {
             input: {
-              id: editProduct.id,
+              id: editCustomer.id,
               ...formData,
             },
           },
@@ -41,15 +42,15 @@ const ProductFormModal: React.FC<ProductFormModalProps> = (
           await Swal.fire({
             position: 'center',
             icon: 'success',
-            title: 'Product Updated Successfully',
-            text: 'Your product has been updated.',
+            title: `${_.capitalize(pathname)} Updated Successfully`,
+            text: `Your ${pathname.toLowerCase()} has been updated.`,
             showConfirmButton: false,
             timer: 1500,
           });
         });
       } else {
         // Create
-        await createProduct({
+        await createCustomer({
           variables: {
             input: {
               ...formData,
@@ -59,8 +60,8 @@ const ProductFormModal: React.FC<ProductFormModalProps> = (
           await Swal.fire({
             position: 'center',
             icon: 'success',
-            title: 'Product Created Successfully',
-            text: 'Your new product has been added.',
+            title: `${_.capitalize(pathname)} Created Successfully`,
+            text: `Your new ${pathname.toLowerCase()} has been added.`,
             showConfirmButton: false,
             timer: 1500,
           });
@@ -73,11 +74,11 @@ const ProductFormModal: React.FC<ProductFormModalProps> = (
       const errorMessage =
         error?.graphQLErrors?.[0]?.message ||
         error?.message ||
-        'An error occurred while saving your product.';
+        `Failed to save ${pathname.toLowerCase()}. Please try again.`;
       await Swal.fire({
         position: 'center',
         icon: 'error',
-        title: 'Product Save Error',
+        title: `${_.capitalize(pathname)} Save Error`,
         text: errorMessage,
         timer: 1500,
       });
@@ -85,16 +86,16 @@ const ProductFormModal: React.FC<ProductFormModalProps> = (
   };
 
   // Combine any existing data for the form
-  const initialData = editProduct
+  const initialData = editCustomer
     ? {
-      name: editProduct.name,
-      price: editProduct.price,
-      description: editProduct.description,
-      stock: editProduct.stock,
-      isVirtual: editProduct.isVirtual,
-      isShow: editProduct.isShow,
-      imageUrl: editProduct.imageUrl,
+      email: editCustomer.email,
+      firstName: editCustomer.firstName,
+      lastName: editCustomer.lastName,
+      countryCode: editCustomer.countryCode,
+      phone: editCustomer.phone,
+      status: editCustomer.status,
     } : {};
+
 
   return (
     <Transition show={isOpen} as={Fragment}>
@@ -132,17 +133,18 @@ const ProductFormModal: React.FC<ProductFormModalProps> = (
                     as="h3"
                     className="text-lg font-semibold leading-6 text-gray-900"
                   >
-                    {isEditMode ? 'Edit Product' : 'Add New Product'}
+                    {isEditMode ? `Edit ${_.capitalize(pathname)}` : `Add New ${_.capitalize(pathname)}`}
                   </Dialog.Title>
                   <p className="text-sm text-gray-500">
-                    {isEditMode
-                      ? 'Update the information below.'
-                      : 'Fill out the form to add a new product.'}
+                    {
+                      isEditMode ? 'Update the information below.'
+                        : `Fill in the details below to create a new ${pathname.toLowerCase()}.`
+                    }
                   </p>
                 </div>
 
                 {/* Form */}
-                <ProductForm
+                <CustomerForm
                   onSave={handleSave}
                   initialData={initialData}
                   isEditMode={isEditMode}
@@ -169,4 +171,4 @@ const ProductFormModal: React.FC<ProductFormModalProps> = (
   );
 };
 
-export default ProductFormModal;
+export default CustomerFormModal;

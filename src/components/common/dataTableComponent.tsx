@@ -3,14 +3,26 @@ import Image from 'next/image';
 import Tooltip from '@/components/common/tooltip';
 import { Button } from '@headlessui/react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faEye, faPen, faTrash } from '@fortawesome/free-solid-svg-icons';
+import { faEye, faPen, faTrash, faTrashArrowUp } from '@fortawesome/free-solid-svg-icons';
 
 /**
  * Represents the allowed types for each column/field.
  */
-export type ColumnType = 'text' | 'number' | 'image' | 'boolean';
+export type ColumnType = 'text' | 'number' | 'image' | 'boolean' | 'select';
 
-export type ActionType = 'edit' | 'delete' | 'view';
+export type ActionType = 'edit' | 'delete' | 'view' | 'restore';
+
+/**
+ * Interface for select option mapping
+ */
+export interface SelectOption {
+  key: number;
+  value: string;
+  color?: {
+    background: string;
+    text: string;
+  };
+}
 
 /**
  * The definition of a single column/field in the table.
@@ -19,6 +31,11 @@ export interface Field<T> {
   name: string;
   key: keyof T;
   type: ColumnType;
+  option?: SelectOption[]; // Optional map for select type
+  defaultColors?: {
+    background: string;
+    text: string;
+  };
 }
 
 /**
@@ -30,6 +47,7 @@ interface DataTableProps<T> {
   onEdit?: (row: T) => void;
   onDelete?: (row: T) => void;
   onView?: (row: T) => void;
+  onRestore?: (row: T) => void;
   onSearchChange?: (searchValue: string) => void;
   actionType?: ActionType[];
   isShowSearchBar?: boolean;
@@ -45,8 +63,8 @@ function classNames(...classes: (string | boolean | undefined)[]) {
 /**
  * A helper for rendering cell value based on field type.
  */
-function renderCellValue<T>(fieldType: ColumnType, value: T[keyof T]) {
-  switch (fieldType) {
+function renderCellValue<T>(field: Field<T>, value: T[keyof T]) {
+  switch (field.type) {
     case 'image':
       return (
         <Image
@@ -60,18 +78,32 @@ function renderCellValue<T>(fieldType: ColumnType, value: T[keyof T]) {
       );
     case 'boolean':
       return value ? (
-        <span
-          className="inline-flex items-center rounded-full bg-green-100 px-2 py-1 text-xs font-medium text-green-700"
-        >
+        <span className="inline-flex items-center rounded-full bg-green-100 px-2 py-1 text-xs font-medium text-green-700">
           True
         </span>
       ) : (
-        <span className="inline-flex items-center rounded-full bg-red-100 px-2 py-1 text-xs font-medium text-red-700"
-        >
+        <span className="inline-flex items-center rounded-full bg-red-100 px-2 py-1 text-xs font-medium text-red-700">
           False
         </span>
       );
-    // 'text' or 'number' can be displayed the same way
+    case 'select':
+      if (field.option) {
+        const selectedOption = field.option.find(option => option.key === value);
+        if (selectedOption) {
+          const colors = selectedOption.color || field.defaultColors || {
+            background: 'bg-gray-100',
+            text: 'text-gray-700'
+          };
+
+          return (
+            <span className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ${colors.background} ${colors.text}`}>
+              {selectedOption.value}
+            </span>
+          );
+        }
+        return String(value);
+      }
+      return String(value);
     default:
       return <span>{String(value)}</span>;
   }
@@ -87,6 +119,7 @@ export function DataTableComponent<T extends object>(
     onEdit,
     onDelete,
     onView,
+    onRestore,
     onSearchChange,
     actionType = [],
     isShowSearchBar = true,
@@ -197,7 +230,7 @@ export function DataTableComponent<T extends object>(
                             'whitespace-nowrap px-3 py-4 text-sm text-gray-500',
                           )}
                         >
-                          {renderCellValue(field.type, cellValue)}
+                          {renderCellValue(field, cellValue)}
                         </td>
                       );
                     })}
@@ -242,6 +275,18 @@ export function DataTableComponent<T extends object>(
                             >
                               <Button className="text-black hover:bg-gray-100 hover:text-gray-700">
                                 <FontAwesomeIcon icon={faTrash} />
+                              </Button>
+                            </div>
+                          </Tooltip>
+                        )}
+                        {actionType.includes('restore') && (
+                          <Tooltip text="Restore" position="bottom">
+                            <div
+                              className="flex items-center justify-center h-10 w-10 rounded-full hover:bg-gray-100 cursor-pointer"
+                              onClick={() => onRestore?.(row)}
+                            >
+                              <Button className="text-black hover:bg-gray-100 hover:text-gray-700">
+                                <FontAwesomeIcon icon={faTrashArrowUp} />
                               </Button>
                             </div>
                           </Tooltip>

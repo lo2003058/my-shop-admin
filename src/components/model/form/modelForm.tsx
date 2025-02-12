@@ -1,42 +1,71 @@
-import React from 'react';
-import { SubmitHandler, useForm, Controller } from 'react-hook-form';
+import React, { useState } from 'react';
+import { Controller, SubmitHandler, useForm } from 'react-hook-form';
+import { ModelFormData, ModelFormProps } from '@/types/model/types';
 import { Switch } from '@headlessui/react';
-import { ProductFormData, ProductFormProps } from '@/types/product/types';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faEye, faEyeSlash, faCopy } from '@fortawesome/free-solid-svg-icons';
+import Swal from 'sweetalert2';
 
-const ProductForm: React.FC<ProductFormProps> = (
+const ModelForm: React.FC<ModelFormProps> = (
   {
     onSave,
     initialData = {},
     isEditMode = false,
-  }) => {
+  },
+) => {
+  const [showApiKey, setShowApiKey] = useState(false);
 
   const {
     register,
     handleSubmit,
     reset,
     control,
+    watch,
     formState: { errors, isSubmitting },
-  } = useForm<ProductFormData>({
+  } = useForm<ModelFormData>({
     defaultValues: {
       name: initialData.name || '',
-      price: initialData.price || 0,
-      description: initialData.description || '',
-      stock: initialData.stock || 1,
-      isVirtual: initialData.isVirtual || false,
+      apiUrl: initialData.apiUrl || '',
+      apiKey: initialData.apiKey || '',
+      isDefault: initialData.isDefault || false,
       isShow: initialData.isShow || true,
-      imageUrl: initialData.imageUrl || '',
     },
   });
 
-  const onSubmit: SubmitHandler<ProductFormData> = async (formData) => {
+  const apiKeyValue = watch('apiKey');
+
+  const maskApiKey = (key: string) => {
+    if (!key) return '';
+    return key.substring(0, 6) + '*'.repeat(Math.max(0, key.length - 6));
+  };
+
+  const Toast = Swal.mixin({
+    toast: true,
+    position: "top-end",
+    showConfirmButton: false,
+    timer: 2000,
+    timerProgressBar: true,
+    didOpen: (toast) => {
+      toast.onmouseenter = Swal.stopTimer;
+      toast.onmouseleave = Swal.resumeTimer;
+    }
+  });
+
+  const handleCopyApiKey = async () => {
+    await navigator.clipboard.writeText(apiKeyValue);
+    await Toast.fire({
+      icon: "success",
+      title: "API Key copied to clipboard"
+    });
+  };
+
+  const onSubmit: SubmitHandler<ModelFormData> = async (formData) => {
     const payload = {
       name: formData.name,
-      description: formData.description,
-      stock: formData.stock,
-      price: formData.price,
-      isVirtual: formData.isVirtual,
+      apiUrl: formData.apiUrl,
+      apiKey: formData.apiKey,
+      isDefault: formData.isDefault,
       isShow: formData.isShow,
-      imageUrl: formData.imageUrl,
     };
     await onSave(payload);
     reset();
@@ -46,12 +75,12 @@ const ProductForm: React.FC<ProductFormProps> = (
     <form onSubmit={handleSubmit(onSubmit)} noValidate>
       <div className="mb-4">
         <label className="block mb-1 text-md font-semibold text-gray-800">
-          Product Name
+          Model Name
         </label>
         <input
           type="text"
-          placeholder="Product Name"
-          {...register('name', { required: 'Product name is required' })}
+          placeholder="Model Name"
+          {...register('name', { required: 'Model name is required' })}
           className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 text-black ${
             errors.name
               ? 'border-red-500 focus:ring-red-500'
@@ -65,88 +94,73 @@ const ProductForm: React.FC<ProductFormProps> = (
 
       <div className="mb-4">
         <label className="block mb-1 text-md font-semibold text-gray-800">
-          Description
-        </label>
-        <textarea
-          id="description"
-          rows={4}
-          {...register('description', { required: 'Description is required' })}
-          className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 text-black resize-none ${
-            errors.description
-              ? 'border-red-500 focus:ring-red-500'
-              : 'border-gray-300 focus:ring-green-500'
-          }`}
-        />
-        {errors.description && (
-          <p className="text-red-500 text-sm mt-1">{errors.description.message}</p>
-        )}
-      </div>
-
-      <div className="mb-4">
-        <label className="block mb-1 text-md font-semibold text-gray-800">
-          Price
-        </label>
-        <input
-          type="number"
-          placeholder="Price"
-          {...register('price', { required: 'Price is required', valueAsNumber: true })}
-          className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 text-black ${
-            errors.price
-              ? 'border-red-500 focus:ring-red-500'
-              : 'border-gray-300 focus:ring-green-500'
-          }`}
-        />
-        {errors.price && (
-          <p className="text-red-500 text-sm mt-1">{errors.price.message}</p>
-        )}
-      </div>
-
-      <div className="mb-4">
-        <label className="block mb-1 text-md font-semibold text-gray-800">
-          Stock
-        </label>
-        <input
-          type="number"
-          placeholder="Stock"
-          {...register('stock', { required: 'Stock is required', valueAsNumber: true })}
-          className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 text-black ${
-            errors.stock
-              ? 'border-red-500 focus:ring-red-500'
-              : 'border-gray-300 focus:ring-green-500'
-          }`}
-        />
-        {errors.stock && (
-          <p className="text-red-500 text-sm mt-1">{errors.stock.message}</p>
-        )}
-      </div>
-
-      <div className="mb-4">
-        <label className="block mb-1 text-md font-semibold text-gray-800">
-          Image URL
+          API Url
         </label>
         <input
           type="text"
-          placeholder="Image Url"
-          {...register('imageUrl')}
+          placeholder="API Url"
+          {...register('apiUrl', { required: 'API Url is required' })}
           className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 text-black ${
-            errors.imageUrl
+            errors.apiUrl
               ? 'border-red-500 focus:ring-red-500'
               : 'border-gray-300 focus:ring-green-500'
           }`}
         />
-        {errors.imageUrl && (
-          <p className="text-red-500 text-sm mt-1">{errors.imageUrl.message}</p>
+        {errors.apiUrl && (
+          <p className="text-red-500 text-sm mt-1">{errors.apiUrl.message}</p>
         )}
       </div>
 
-      {/* Updated Is Virtual field with Headless UI Switch */}
       <div className="mb-4">
         <label className="block mb-1 text-md font-semibold text-gray-800">
-          Is virtual
+          API Key
+        </label>
+        <div className="relative">
+          <input
+            type={showApiKey ? 'text' : 'password'}
+            placeholder="API Key"
+            {...register('apiKey', { required: 'API Key is required' })}
+            className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 text-black pr-24 ${
+              errors.apiKey
+                ? 'border-red-500 focus:ring-red-500'
+                : 'border-gray-300 focus:ring-green-500'
+            }`}
+            value={isEditMode ? (showApiKey ? apiKeyValue : maskApiKey(apiKeyValue)) : apiKeyValue}
+            onChange={(e) => {
+              register('apiKey').onChange(e);
+            }}
+          />
+          <div className="absolute inset-y-0 right-0 flex items-center pr-3 gap-2">
+            <button
+              type="button"
+              onClick={() => setShowApiKey(!showApiKey)}
+              className="text-gray-600 hover:text-gray-800 focus:outline-none"
+              title={showApiKey ? 'Hide API Key' : 'Show API Key'}
+            >
+              <FontAwesomeIcon icon={showApiKey ? faEyeSlash : faEye} />
+            </button>
+            <button
+              type="button"
+              onClick={handleCopyApiKey}
+              className="text-gray-600 hover:text-gray-800 focus:outline-none"
+              title="Copy API Key"
+            >
+              <FontAwesomeIcon icon={faCopy} />
+            </button>
+          </div>
+        </div>
+        {errors.apiKey && (
+          <p className="text-red-500 text-sm mt-1">{errors.apiKey.message}</p>
+        )}
+      </div>
+
+      <div className="mb-4">
+        <label className="block mb-1 text-md font-semibold text-gray-800">
+          Is Default
         </label>
         <Controller
           control={control}
-          name="isVirtual"
+          name="isDefault"
           render={({ field: { onChange, value } }) => (
             <Switch
               checked={value}
@@ -192,7 +206,6 @@ const ProductForm: React.FC<ProductFormProps> = (
         />
       </div>
 
-      {/* Submit */}
       <div className="flex justify-end space-x-2">
         <button
           type="submit"
@@ -206,12 +219,12 @@ const ProductForm: React.FC<ProductFormProps> = (
               ? 'Updating...'
               : 'Saving...'
             : isEditMode
-              ? 'Update Product'
-              : 'Save Product'}
+              ? 'Update Model'
+              : 'Save Model'}
         </button>
       </div>
     </form>
   );
 };
 
-export default ProductForm;
+export default ModelForm;

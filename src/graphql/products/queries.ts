@@ -50,7 +50,7 @@ export const GET_PRODUCTS = gql`
 `;
 
 export const GET_PRODUCTS_PAGINATED = gql`
-    query GetProductsPaginated($page: Int, $pageSize: Int, $filter: ProductFilterInput) {
+    query GetProductsPaginated($page: Int!, $pageSize: Int!, $filter: ProductFilterInput) {
         productsV2(page: $page, pageSize: $pageSize, filter: $filter) {
             items {
                 id
@@ -59,6 +59,7 @@ export const GET_PRODUCTS_PAGINATED = gql`
                 price
                 stock
                 isVirtual
+                isShow
                 imageUrl
                 createdAt
                 updatedAt

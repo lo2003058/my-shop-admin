@@ -1,25 +1,22 @@
 'use client';
 
 import React, { useCallback, useState } from 'react';
-import TitleComponent from '@/components/common/titleComponent';
 import ContainersComponent from '@/components/common/containersComponent';
+import TitleComponent from '@/components/common/titleComponent';
+import { DataTableComponent } from '@/components/common/dataTableComponent';
+import PaginationButtons from '@/components/common/paginationButtons';
 import { useMutation, useQuery } from '@apollo/client';
+import Swal from 'sweetalert2';
+import { GqlErrorMessage } from '@/types/error/types';
+import { modelFields } from '@/config/tableFields';
 import { Model, ModelsData } from '@/types/model/types';
 import { GET_MODELS_PAGINATED } from '@/graphql/model/queries';
-import { REMOVE_MODEL } from '@/graphql/model/mutation';
-import { DataTableComponent } from '@/components/common/dataTableComponent';
-import { modelFields } from '@/config/tableFields';
-import PaginationButtons from '@/components/common/paginationButtons';
-import Swal from 'sweetalert2';
-import ModelFormModal from '@/components/model/form/modelFormModal';
+import { UPDATE_MODEL } from '@/graphql/model/mutation';
 
-const ModelPage: React.FC = () => {
-
+const TrashedModelPage: React.FC = () => {
   // For pagination & search
   const [page, setPage] = useState(1);
   const [searchTerm, setSearchTerm] = useState('');
-  const [isModalOpen, setModalOpen] = useState(false);
-  const [editModel, setEditModel] = useState<Model | null>(null);
 
   // Page size config
   const pageSize = 10;
@@ -33,13 +30,14 @@ const ModelPage: React.FC = () => {
         pageSize,
         filter: {
           searchTerm: searchTerm,
+          isShow: false,
         },
       },
       fetchPolicy: 'network-only',
     },
   );
 
-  const [removeModel] = useMutation(REMOVE_MODEL);
+  const [updateModel] = useMutation(UPDATE_MODEL);
 
   const refetchData = useCallback(
     (newPage: number) => {
@@ -54,22 +52,6 @@ const ModelPage: React.FC = () => {
     },
     [pageSize, searchTerm, refetch],
   );
-
-  const handleCloseModal = () => {
-    refetch().finally(() => {
-      setModalOpen(false);
-    });
-  };
-
-  const handleOpenModalForCreate = () => {
-    setEditModel(null);
-    setModalOpen(true);
-  };
-
-  const handleOpenModalForEdit = (data: Model) => {
-    setEditModel(data);
-    setModalOpen(true);
-  };
 
   // Handlers
   const handleSearchChange = (value: string) => {
@@ -100,59 +82,60 @@ const ModelPage: React.FC = () => {
     );
   }
 
-  // Decide how to grab products and total pages
+  // Decide how to grab models and total pages
   const models = data?.paginatedModel?.items ?? [];
   const totalPages = data?.paginatedModel?.totalPages ?? 1;
 
-  const handleDelete = async (item: Model) => {
-    await Swal.fire({
-      title: 'Delete Model',
-      text: 'Are you sure you want to delete this model?',
-      icon: 'warning',
-      showCancelButton: true,
-      confirmButtonText: 'Delete',
-      confirmButtonColor: 'red',
-      cancelButtonText: 'Cancel',
-    }).then(async (result) => {
-        if (result.isConfirmed) {
-          await removeModel({
-            variables: { id: item.id },
-          })
-            .then(async () => {
-              await Swal.fire({
-                position: 'center',
-                icon: 'success',
-                title: 'Deleted Successfully',
-                text: 'Model has been deleted.',
-                showConfirmButton: false,
-                timer: 1500,
-              });
-            })
-            .finally(() => {
-              refetch(); // or any other state update needed
-            });
-        }
-      },
-    );
+  const handleRestore = async (formData: Model) => {
+    try {
+      await updateModel({
+        variables: {
+          input: {
+            id: formData.id,
+            isShow: true,
+          },
+        },
+      }).then(async () => {
+        await Swal.fire({
+          position: 'center',
+          icon: 'success',
+          title: 'Product restore Successfully',
+          text: 'Your product has been restored.',
+          showConfirmButton: false,
+          timer: 1500,
+        });
+      });
+      refetch();
+    } catch (err: unknown) {
+      const error = err as GqlErrorMessage;
+      // Extract error message
+      const errorMessage =
+        error?.graphQLErrors?.[0]?.message ||
+        error?.message ||
+        'An error occurred while restoring your product.';
+      await Swal.fire({
+        position: 'center',
+        icon: 'error',
+        title: 'Product restore Error',
+        text: errorMessage,
+        timer: 1500,
+      });
+    }
   };
 
   return (
     <ContainersComponent>
       <TitleComponent
-        title="Model"
-        routeName="model"
-        isShowCreateButton
-        createButtonOnClick={handleOpenModalForCreate}
-        isShowTrashedButton
+        title="Trashed product"
+        isShowBackButton
       />
       <DataTableComponent
         data={models}
         fields={modelFields}
-        onEdit={(item) => handleOpenModalForEdit(item)}
-        onDelete={(item) => handleDelete(item)}
+        onRestore={(item) => handleRestore(item)}
         onSearchChange={handleSearchChange}
         isShowSearchBar
-        actionType={['edit', 'delete']}
+        actionType={['restore']}
       />
       <PaginationButtons
         currentPage={page}
@@ -160,13 +143,8 @@ const ModelPage: React.FC = () => {
         onPrevPage={goToPreviousPage}
         onNextPage={goToNextPage}
       />
-      <ModelFormModal
-        isOpen={isModalOpen}
-        onClose={handleCloseModal}
-        editModel={editModel}
-      />
     </ContainersComponent>
   );
 };
 
-export default ModelPage;
+export default TrashedModelPage;

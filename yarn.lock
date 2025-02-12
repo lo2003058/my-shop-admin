@@ -842,6 +842,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@types/lodash@npm:^4.17.15":
+  version: 4.17.15
+  resolution: "@types/lodash@npm:4.17.15"
+  checksum: 5037564154411f4ac0b187b914031c150520a7ca037dea007f774b7123c97c0da55b2e41ae81dc1bc80ff09e8d6a236455ea676d5062af12c592b8e81baec7bf
+  languageName: node
+  linkType: hard
+
 "@types/node@npm:^20":
   version: 20.17.16
   resolution: "@types/node@npm:20.17.16"
@@ -3274,6 +3281,7 @@ __metadata:
     "@fortawesome/free-solid-svg-icons": ^6.7.2
     "@fortawesome/react-fontawesome": ^0.2.2
     "@headlessui/react": ^2.2.0
+    "@types/lodash": ^4.17.15
     "@types/node": ^20
     "@types/react": ^19
     "@types/react-dom": ^19

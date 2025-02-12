@@ -1,26 +1,26 @@
 'use client';
 
 import React, { useCallback, useState } from 'react';
-import TitleComponent from '@/components/common/titleComponent';
 import ContainersComponent from '@/components/common/containersComponent';
-import { useMutation, useQuery } from '@apollo/client';
-import { GET_PRODUCTS_PAGINATED } from '@/graphql/products/queries';
-import { EditProductData, Product, ProductsData } from '@/types/product/types';
+import TitleComponent from '@/components/common/titleComponent';
 import { DataTableComponent } from '@/components/common/dataTableComponent';
 import PaginationButtons from '@/components/common/paginationButtons';
-import ProductFormModal from '@/components/product/form/productFormModal';
-import { REMOVE_PRODUCT } from '@/graphql/products/mutation';
+import { EditProductData, Product, ProductsData } from '@/types/product/types';
+import { useMutation, useQuery } from '@apollo/client';
+import { GET_PRODUCTS_PAGINATED } from '@/graphql/products/queries';
 import Swal from 'sweetalert2';
+import { GqlErrorMessage } from '@/types/error/types';
+import { UPDATE_PRODUCT } from '@/graphql/products/mutation';
 import ProductViewModal from '@/components/product/view/productViewModal';
 import { productFields } from '@/config/tableFields';
 
-const ProductPage: React.FC = () => {
+const TrashedProductPage: React.FC = () => {
   // For pagination & search
   const [page, setPage] = useState(1);
   const [searchTerm, setSearchTerm] = useState('');
-  const [isModalOpen, setModalOpen] = useState(false);
   const [isViewModalOpen, setViewModalOpen] = useState(false);
   const [editProduct, setEditProduct] = useState<EditProductData | null>(null);
+
   // Page size config
   const pageSize = 10;
 
@@ -33,13 +33,14 @@ const ProductPage: React.FC = () => {
         pageSize,
         filter: {
           searchTerm: searchTerm,
+          isShow: false,
         },
       },
       fetchPolicy: 'network-only',
     },
   );
 
-  const [removeProduct] = useMutation(REMOVE_PRODUCT);
+  const [updateProduct] = useMutation(UPDATE_PRODUCT);
 
   const refetchData = useCallback(
     (newPage: number) => {
@@ -55,32 +56,15 @@ const ProductPage: React.FC = () => {
     [pageSize, searchTerm, refetch],
   );
 
-  const handleCloseModal = () => {
-    refetch().finally(() => {
-      setModalOpen(false);
-      setViewModalOpen(false);
-    });
-  };
-
-  const handleOpenModalForCreate = () => {
-    setEditProduct(null);
-    setModalOpen(true);
-  };
-
-  const handleOpenModalForEdit = (data: EditProductData) => {
-    setEditProduct(data);
-    setModalOpen(true);
+  // Handlers
+  const handleSearchChange = (value: string) => {
+    setSearchTerm(value);
+    setPage(1);
   };
 
   const handleOpenModalForView = (data: EditProductData) => {
     setEditProduct(data);
     setViewModalOpen(true);
-  };
-
-  // Handlers
-  const handleSearchChange = (value: string) => {
-    setSearchTerm(value);
-    setPage(1);
   };
 
   const goToNextPage = useCallback(() => {
@@ -110,67 +94,63 @@ const ProductPage: React.FC = () => {
   const products = data?.productsV2?.items ?? [];
   const totalPages = data?.productsV2?.totalPages ?? 1;
 
-  const handleDelete = async (item: Product) => {
-    await Swal.fire({
-      title: 'Delete Product',
-      text: 'Are you sure you want to delete this product?',
-      icon: 'warning',
-      showCancelButton: true,
-      confirmButtonText: 'Delete',
-      confirmButtonColor: 'red',
-      cancelButtonText: 'Cancel',
-    }).then(async (result) => {
-        if (result.isConfirmed) {
-          await removeProduct({
-            variables: { id: item.id },
-          })
-            .then(async () => {
-              await Swal.fire({
-                position: 'center',
-                icon: 'success',
-                title: 'Deleted Successfully',
-                text: 'Product has been deleted.',
-                showConfirmButton: false,
-                timer: 1500,
-              });
-            })
-            .finally(() => {
-              refetch(); // or any other state update needed
-            });
-        }
-      },
-    );
+  const handleRestore = async (formData: Product) => {
+    try {
+      await updateProduct({
+        variables: {
+          input: {
+            id: formData.id,
+            isShow: true,
+          },
+        },
+      }).then(async () => {
+        await Swal.fire({
+          position: 'center',
+          icon: 'success',
+          title: 'Product restore Successfully',
+          text: 'Your product has been restored.',
+          showConfirmButton: false,
+          timer: 1500,
+        });
+      });
+      refetch();
+    } catch (err: unknown) {
+      const error = err as GqlErrorMessage;
+      // Extract error message
+      const errorMessage =
+        error?.graphQLErrors?.[0]?.message ||
+        error?.message ||
+        'An error occurred while restoring your product.';
+      await Swal.fire({
+        position: 'center',
+        icon: 'error',
+        title: 'Product restore Error',
+        text: errorMessage,
+        timer: 1500,
+      });
+    }
   };
 
   return (
     <ContainersComponent>
       <TitleComponent
-        title="Product"
-        routeName="product"
-        isShowCreateButton
-        isShowTrashedButton
-        createButtonOnClick={handleOpenModalForCreate}
+        title="Trashed product"
+        isShowBackButton
       />
       <DataTableComponent
         data={products}
         fields={productFields}
-        onEdit={(item) => handleOpenModalForEdit(item)}
-        onDelete={(item) => handleDelete(item)}
         onView={(item) => handleOpenModalForView(item)}
+        onRestore={(item) => handleRestore(item)}
         onSearchChange={handleSearchChange}
         isShowSearchBar
-        actionType={['view', 'edit', 'delete']}
+        actionType={['view', 'restore']}
       />
       <PaginationButtons
         currentPage={page}
         totalPages={totalPages}
         onPrevPage={goToPreviousPage}
         onNextPage={goToNextPage}
-      />
-      <ProductFormModal
-        isOpen={isModalOpen}
-        onClose={handleCloseModal}
-        editProduct={editProduct}
       />
       <ProductViewModal
         isOpen={isViewModalOpen}
@@ -181,4 +161,4 @@ const ProductPage: React.FC = () => {
   );
 };
 
-export default ProductPage;
+export default TrashedProductPage;

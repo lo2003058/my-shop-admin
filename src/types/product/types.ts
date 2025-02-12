@@ -5,30 +5,9 @@ export interface Product {
   price: number; // Ensure price is consistently a number
   stock: number;
   isVirtual: boolean;
+  isShow: boolean;
   imageUrl?: string;
   isCustomerWishListed?: boolean;
-}
-
-export interface RecommendProduct {
-  id: number;
-  name: string;
-  description: string;
-  price: number; // Changed to number for consistency
-  stock: number;
-  isVirtual: boolean;
-  imageUrl?: string;
-}
-
-export interface GetProduct {
-  product: Product;
-}
-
-export interface GetProductForClient {
-  productForClient: Product;
-}
-
-export interface GetProducts {
-  products: Product[];
 }
 
 export interface ProductsData {
@@ -48,14 +27,55 @@ export interface EditProductData {
   price: number;
   stock: number;
   isVirtual: boolean;
+  isShow: boolean;
   imageUrl?: string;
 }
 
-export interface ProductData {
+export interface ProductFormData {
   name: string;
   description: string;
-  price: number;
   stock: number;
+  price: number;
   isVirtual: boolean;
-  imageUrl?: string;
+  isShow: boolean;
+  imageUrl: string;
+}
+
+export interface ProductViewProps {
+  productData?: Partial<{
+    name: string;
+    price: number;
+    description: string;
+    stock: number;
+    isVirtual: boolean;
+    imageUrl: string;
+  }>;
+}
+
+export interface ProductFormModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  editProduct?: EditProductData | null;
+}
+
+export interface ProductFormProps {
+  onSave: (serializedData: {
+    name: string;
+    description: string;
+    stock: number;
+    price: number;
+    isVirtual: boolean;
+    isShow: boolean;
+    imageUrl: string;
+  }) => Promise<void>;
+  initialData?: Partial<{
+    name: string;
+    price: number;
+    description: string;
+    stock: number;
+    isVirtual: boolean;
+    isShow: boolean;
+    imageUrl: string;
+  }>;
+  isEditMode?: boolean;
 }
