@@ -2,6 +2,20 @@ import { IconDefinition } from '@fortawesome/fontawesome-svg-core';
 import { Tier } from '@/types/tier/types';
 import { Product } from '@/types/product/types';
 
+export interface Customer {
+  id: number;
+  email: string;
+  password: string;
+  firstName: string;
+  lastName: string;
+  countryCode: string;
+  phone: string;
+  status: number;
+  customerPoints: CustomerPoints;
+  tier: Tier;
+  customerAddress?: CustomerAddress[];
+}
+
 export interface SecondaryNavigationItem {
   name: string;
   href: string;
@@ -45,20 +59,6 @@ export interface PaginatedWishList {
   currentPage: number;
   pageSize: number;
   totalPages: number;
-}
-
-export interface Customer {
-  id: number;
-  email: string;
-  password: string;
-  firstName: string;
-  lastName: string;
-  countryCode: string;
-  phone: string;
-  status: number;
-  customerPoints: CustomerPoints;
-  tier: Tier;
-  customerAddress?: CustomerAddress[];
 }
 
 export interface GetCustomer {
@@ -142,5 +142,5 @@ export interface CustomerViewModalProps {
 }
 
 export interface CustomerViewProps {
-  customerData?: Partial<CustomerFormData>;
+  customerData?: Partial<Customer>;
 }

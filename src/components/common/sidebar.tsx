@@ -1,7 +1,12 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Dialog, DialogBackdrop, DialogPanel, TransitionChild } from '@headlessui/react';
+import {
+  Dialog,
+  DialogBackdrop,
+  DialogPanel,
+  TransitionChild,
+} from '@headlessui/react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
   faXmark,
@@ -15,25 +20,48 @@ import { navigationRoute } from '@/config/navigationRoute';
 import Link from 'next/link';
 import Tooltip from '@/components/common/tooltip';
 import Swal from 'sweetalert2';
-import { signOut } from 'next-auth/react';
+import { signOut, useSession } from 'next-auth/react';
 
 export default function SideBar() {
+  const { data: session } = useSession();
+
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
-  // State to track which "page" of the nav we are on
+  // State for paging navigation items
   const [currentPage, setCurrentPage] = useState(0);
-
-  // How many items we show per page
   const itemsPerPage = 10;
 
-  // Calculate slice indices
+  // Helper function to check if a required permission is allowed.
+  // It checks for an exact match or, if a permission ends with ':*',
+  // it will allow any permission that starts with the same prefix.
+  const isAllowed = (required: string) => {
+    const userPermissions = session?.user?.role?.permissions || [];
+    for (const up of userPermissions) {
+      if (up === required) return true;
+      if (up.endsWith(':*')) {
+        const prefix = up.slice(0, up.length - 2);
+        if (required.startsWith(prefix + ':')) return true;
+      }
+    }
+    return false;
+  };
+
+  // Filter navigation items based on permission.
+  // If an item doesn't specify any permission, include it.
+  // Otherwise, include the item if the user has at least one of the required permissions.
+  const filteredNavigation = navigationRoute.filter((item) => {
+    if (!item.permission || item.permission.length === 0) {
+      return true;
+    }
+    return item.permission.some((perm) => isAllowed(perm));
+  });
+
+  // Paging: calculate slice indices based on the filtered navigation.
   const startIndex = currentPage * itemsPerPage;
   const endIndex = startIndex + itemsPerPage;
+  const currentNavigation = filteredNavigation.slice(startIndex, endIndex);
 
-  // Slice the navigation array to get only the items for the current page
-  const currentNavigation = navigationRoute.slice(startIndex, endIndex);
-
-  // Handlers for paging
+  // Paging handlers
   const handlePrev = () => {
     if (currentPage > 0) {
       setCurrentPage((prev) => prev - 1);
@@ -41,15 +69,14 @@ export default function SideBar() {
   };
 
   const handleNext = () => {
-    if (endIndex < navigationRoute.length) {
+    if (endIndex < filteredNavigation.length) {
       setCurrentPage((prev) => prev + 1);
     }
   };
 
-  // Check if navigation is more than a single "page"
-  const hasMultiplePages = navigationRoute.length > itemsPerPage;
+  const hasMultiplePages = filteredNavigation.length > itemsPerPage;
 
-  // Placeholder logout handler
+  // Logout handler using Swal for confirmation
   const handleLogout = async () => {
     await Swal.fire({
       title: 'Sign Out',
@@ -95,7 +122,6 @@ export default function SideBar() {
               </div>
             </TransitionChild>
 
-            {/* Make the inside a full flex-col, so logout can stick to bottom */}
             <div className="flex h-screen w-screen flex-col bg-white ring-1 ring-white/10">
               <div className="flex-shrink-0 flex items-center h-16 px-6">
                 <Image
@@ -108,7 +134,7 @@ export default function SideBar() {
                 />
               </div>
 
-              {/* Nav (scrollable area) */}
+              {/* Navigation */}
               <nav className="flex-1 overflow-y-auto px-6 pb-2">
                 <ul role="list" className="-mx-2 space-y-1">
                   {currentNavigation.map((item, index) => (
@@ -124,7 +150,6 @@ export default function SideBar() {
                   ))}
                 </ul>
 
-                {/* Paging buttons (only if needed) */}
                 {hasMultiplePages && (
                   <div className="flex justify-between mt-4">
                     <button
@@ -136,7 +161,7 @@ export default function SideBar() {
                     </button>
                     <button
                       onClick={handleNext}
-                      disabled={endIndex >= navigationRoute.length}
+                      disabled={endIndex >= filteredNavigation.length}
                       className="disabled:opacity-40 p-2"
                     >
                       <FontAwesomeIcon icon={faAngleDown} className="text-black" />
@@ -145,7 +170,6 @@ export default function SideBar() {
                 )}
               </nav>
 
-              {/* Logout Button pinned at the bottom */}
               <div className="mt-auto flex justify-center p-4 gap-8">
                 <Link
                   href="#"
@@ -168,16 +192,13 @@ export default function SideBar() {
 
       {/* DESKTOP SIDEBAR */}
       <div
-        className="border-r-2 hidden lg:fixed lg:inset-y-0 lg:left-0 lg:z-10 lg:block lg:w-20 lg:bg-white lg:ring-1 lg:ring-white/10"
-      >
+        className="border-r-2 hidden lg:fixed lg:inset-y-0 lg:left-0 lg:z-10 lg:block lg:w-20 lg:bg-white lg:ring-1 lg:ring-white/10">
         <div className="flex h-full flex-col">
-          {/* Logo */}
           <div className="flex-shrink-0 flex items-center justify-center h-16">
             <Tooltip text={`Get rich!`} position={`right`}>
               <Link href={`/account`}>
                 <div
-                  className="inline-flex items-center justify-center p-1 bg-gray-100 rounded-full border-2 border-gray-600 hover:bg-gray-200"
-                >
+                  className="inline-flex items-center justify-center p-1 bg-gray-100 rounded-full border-2 border-gray-600 hover:bg-gray-200">
                   <Image
                     src="/images/happy-pepe.png"
                     alt="company logo"
@@ -191,7 +212,6 @@ export default function SideBar() {
             </Tooltip>
           </div>
 
-          {/* Nav (scrollable) */}
           <nav className="mt-4 flex-1 overflow-y-auto">
             <ul role="list" className="flex flex-col items-center space-y-1">
               {currentNavigation.map((item, index) => (
@@ -208,7 +228,6 @@ export default function SideBar() {
               ))}
             </ul>
 
-            {/* Paging buttons (desktop) */}
             {hasMultiplePages && (
               <div className="flex flex-col items-center mt-4 space-y-2">
                 <button
@@ -220,7 +239,7 @@ export default function SideBar() {
                 </button>
                 <button
                   onClick={handleNext}
-                  disabled={endIndex >= navigationRoute.length}
+                  disabled={endIndex >= filteredNavigation.length}
                   className="disabled:opacity-40 p-2"
                 >
                   <FontAwesomeIcon icon={faAngleDown} className="text-black" />
@@ -229,14 +248,12 @@ export default function SideBar() {
             )}
           </nav>
 
-          {/* Logout Icon pinned at the bottom */}
           <div className="mt-auto flex items-center justify-center p-4">
             <Tooltip text={`Logout`} position={`right`}>
               <button
                 type="button"
                 onClick={handleLogout}
-                className="inline-flex items-center justify-center h-10 w-10
-                         rounded-full bg-red-600 text-white hover:bg-red-700 transition-colors"
+                className="inline-flex items-center justify-center h-10 w-10 rounded-full bg-red-600 text-white hover:bg-red-700 transition-colors"
               >
                 <FontAwesomeIcon icon={faSignOutAlt} />
               </button>
@@ -256,8 +273,6 @@ export default function SideBar() {
           <FontAwesomeIcon icon={faBars} className="text-black" />
         </button>
       </div>
-
-      {/*<Breadcrumbs />*/}
     </>
   );
 }

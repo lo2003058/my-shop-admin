@@ -53,7 +53,7 @@ const TitleComponent: React.FC<TitleProps> = (
             onClick={createButtonOnClick}
             className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none"
           >
-            <FontAwesomeIcon icon={faPlus} className="mr-2 h-5 w-5" aria-hidden="true" />
+            <FontAwesomeIcon icon={faPlus} className="mr-2 h-5 w-5"/>
             Create
           </button>
         )}
@@ -63,7 +63,7 @@ const TitleComponent: React.FC<TitleProps> = (
             href={`/${routeName}/trashed`}
             className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-red-600 hover:bg-red-700 focus:outline-none"
           >
-            <FontAwesomeIcon icon={faTrash} className="mr-2 h-5 w-5" aria-hidden="true" />
+            <FontAwesomeIcon icon={faTrash} className="mr-2 h-5 w-5"/>
             Trashed
           </Link>
         )}

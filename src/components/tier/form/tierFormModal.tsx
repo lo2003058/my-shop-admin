@@ -1,24 +1,25 @@
 import React, { Fragment } from 'react';
-import { ModelFormData, ModelFormModalProps } from '@/types/model/types';
+import { TierFormData, TierFormModalProps } from '@/types/tier/types';
+import { useSession } from 'next-auth/react';
+import { usePathname } from 'next/navigation';
 import { useMutation } from '@apollo/client';
-import { CREATE_MODEL, UPDATE_MODEL } from '@/graphql/model/mutation';
 import Swal from 'sweetalert2';
+import _ from 'lodash';
 import { GqlErrorMessage } from '@/types/error/types';
+import { UPDATE_TIER } from '@/graphql/tier/mutation';
 import { Dialog, Transition } from '@headlessui/react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faXmark } from '@fortawesome/free-solid-svg-icons';
-import { usePathname } from 'next/navigation';
-import ModelForm from '@/components/model/form/modelForm';
-import _ from 'lodash';
-import { useSession } from 'next-auth/react';
+import TierForm from '@/components/tier/form/tierForm';
 
-const ModelFormModal: React.FC<ModelFormModalProps> = (
+const TierFormModal: React.FC<TierFormModalProps> = (
   {
     isOpen,
     onClose,
-    editModel,
+    editTier,
   },
 ) => {
+
   const { data: session } = useSession();
 
   const adminToken = session?.accessToken;
@@ -26,20 +27,18 @@ const ModelFormModal: React.FC<ModelFormModalProps> = (
   const rawPathname = usePathname();
   const pathname = rawPathname.replace('/', '');
 
-  const isEditMode = Boolean(editModel?.id);
+  const isEditMode = Boolean(editTier?.id);
 
-  // Apollo Mutations
-  const [createModel] = useMutation(CREATE_MODEL);
-  const [updateModel] = useMutation(UPDATE_MODEL);
+  const [updateTier] = useMutation(UPDATE_TIER);
 
-  const handleSave = async (formData: ModelFormData) => {
+  const handleSave = async (formData: TierFormData) => {
     try {
-      if (isEditMode && editModel?.id) {
+      if (isEditMode && editTier?.id) {
         // Update
-        await updateModel({
+        await updateTier({
           variables: {
             input: {
-              id: editModel.id,
+              id: editTier.id,
               ...formData,
             },
           },
@@ -52,27 +51,6 @@ const ModelFormModal: React.FC<ModelFormModalProps> = (
             icon: 'success',
             title: `${_.capitalize(pathname)} Updated Successfully`,
             text: `Your ${pathname.toLowerCase()} has been updated.`,
-            showConfirmButton: false,
-            timer: 1500,
-          });
-        });
-      } else {
-        // Create
-        await createModel({
-          variables: {
-            input: {
-              ...formData,
-            },
-          },
-          context: {
-            headers: { 'authorization-admin': `Bearer ${adminToken}` },
-          },
-        }).then(async () => {
-          await Swal.fire({
-            position: 'center',
-            icon: 'success',
-            title: `${_.capitalize(pathname)} Created Successfully`,
-            text: `Your new ${pathname.toLowerCase()} has been added.`,
             showConfirmButton: false,
             timer: 1500,
           });
@@ -97,13 +75,10 @@ const ModelFormModal: React.FC<ModelFormModalProps> = (
   };
 
   // Combine any existing data for the form
-  const initialData = editModel
+  const initialData = editTier
     ? {
-      name: editModel.name,
-      apiUrl: editModel.apiUrl,
-      apiKey: editModel.apiKey,
-      isDefault: editModel.isDefault,
-      isShow: editModel.isShow,
+      name: editTier.name,
+      requiredPoints: editTier.requiredPoints,
     } : {};
 
   return (
@@ -152,7 +127,7 @@ const ModelFormModal: React.FC<ModelFormModalProps> = (
                 </div>
 
                 {/* Form */}
-                <ModelForm
+                <TierForm
                   onSave={handleSave}
                   initialData={initialData}
                   isEditMode={isEditMode}
@@ -179,4 +154,4 @@ const ModelFormModal: React.FC<ModelFormModalProps> = (
   );
 };
 
-export default ModelFormModal;
+export default TierFormModal;

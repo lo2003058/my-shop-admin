@@ -10,6 +10,7 @@ import { CREATE_CUSTOMER, UPDATE_CUSTOMER } from '@/graphql/Customer/mutation';
 import { usePathname } from 'next/navigation';
 import _ from 'lodash';
 import CustomerForm from '@/components/customer/form/customerForm';
+import { useSession } from 'next-auth/react';
 
 const CustomerFormModal: React.FC<CustomerFormModalProps> = (
   {
@@ -18,6 +19,10 @@ const CustomerFormModal: React.FC<CustomerFormModalProps> = (
     editCustomer,
   },
 ) => {
+  const { data: session } = useSession();
+
+  const adminToken = session?.accessToken;
+
   const rawPathname = usePathname();
   const pathname = rawPathname.replace('/', '');
 
@@ -38,6 +43,9 @@ const CustomerFormModal: React.FC<CustomerFormModalProps> = (
               ...formData,
             },
           },
+          context: {
+            headers: { 'authorization-admin': `Bearer ${adminToken}` },
+          },
         }).then(async () => {
           await Swal.fire({
             position: 'center',
@@ -55,6 +63,9 @@ const CustomerFormModal: React.FC<CustomerFormModalProps> = (
             input: {
               ...formData,
             },
+          },
+          context: {
+            headers: { 'authorization-admin': `Bearer ${adminToken}` },
           },
         }).then(async () => {
           await Swal.fire({

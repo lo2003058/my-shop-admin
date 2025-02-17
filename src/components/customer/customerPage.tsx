@@ -13,8 +13,12 @@ import { customerFields } from '@/config/tableFields';
 import { REMOVE_CUSTOMER } from '@/graphql/Customer/mutation';
 import CustomerFormModal from '@/components/customer/form/customerFormModal';
 import CustomerViewModal from '@/components/customer/view/customerViewModal';
+import { useSession } from 'next-auth/react';
 
 const CustomerPage: React.FC = () => {
+  const { data: session } = useSession();
+
+  const adminToken = session?.accessToken;
 
   // For pagination & search
   const [page, setPage] = useState(1);
@@ -63,11 +67,6 @@ const CustomerPage: React.FC = () => {
     });
   };
 
-  const handleOpenModalForCreate = () => {
-    setEditCustomer(null);
-    setModalOpen(true);
-  };
-
   const handleOpenModalForEdit = (data: Customer) => {
     setEditCustomer(data);
     setModalOpen(true);
@@ -78,7 +77,6 @@ const CustomerPage: React.FC = () => {
     setViewModalOpen(true);
   };
 
-  // Handlers
   const handleSearchChange = (value: string) => {
     setSearchTerm(value);
     setPage(1);
@@ -97,6 +95,9 @@ const CustomerPage: React.FC = () => {
         if (result.isConfirmed) {
           await removeCustomer({
             variables: { id: item.id },
+            context: {
+              headers: { 'authorization-admin': `Bearer ${adminToken}` },
+            },
           })
             .then(async () => {
               await Swal.fire({
@@ -143,14 +144,11 @@ const CustomerPage: React.FC = () => {
   const customers = data?.paginatedCustomer?.items ?? [];
   const totalPages = data?.paginatedCustomer?.totalPages ?? 1;
 
-
   return (
     <ContainersComponent>
       <TitleComponent
         title="Customer"
         routeName="customer"
-        isShowCreateButton
-        createButtonOnClick={handleOpenModalForCreate}
       />
       <DataTableComponent
         data={customers}

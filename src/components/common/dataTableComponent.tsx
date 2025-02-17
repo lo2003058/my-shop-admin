@@ -78,7 +78,8 @@ function renderCellValue<T>(field: Field<T>, value: T[keyof T]) {
       );
     case 'boolean':
       return value ? (
-        <span className="inline-flex items-center rounded-full bg-green-100 px-2 py-1 text-xs font-medium text-green-700">
+        <span
+          className="inline-flex items-center rounded-full bg-green-100 px-2 py-1 text-xs font-medium text-green-700">
           True
         </span>
       ) : (
@@ -92,11 +93,13 @@ function renderCellValue<T>(field: Field<T>, value: T[keyof T]) {
         if (selectedOption) {
           const colors = selectedOption.color || field.defaultColors || {
             background: 'bg-gray-100',
-            text: 'text-gray-700'
+            text: 'text-gray-700',
           };
 
           return (
-            <span className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ${colors.background} ${colors.text}`}>
+            <span
+              className={`${colors.background} ${colors.text} select-none inline-flex items-center rounded-full px-2 py-1 text-xs font-medium`}
+            >
               {selectedOption.value}
             </span>
           );

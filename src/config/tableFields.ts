@@ -2,6 +2,8 @@ import { Field, SelectOption } from '@/components/common/dataTableComponent';
 import { Product } from '@/types/product/types';
 import { Model } from '@/types/model/types';
 import { Customer } from '@/types/customer/types';
+import { Tier } from '@/types/tier/types';
+import { ActionLog } from '@/types/action-log/types';
 
 export const productFields: Field<Product>[] = [
   { name: 'ID', key: 'id', type: 'text' },
@@ -30,7 +32,7 @@ const statusOptions: SelectOption[] = [
   {
     key: 1,
     value: 'Inactive',
-    color: { background: 'bg-gray-100', text: 'text-gray-700' },
+    color: { background: 'bg-amber-100', text: 'text-amber-700' },
   },
   {
     key: 2,
@@ -52,4 +54,18 @@ export const customerFields: Field<Customer>[] = [
     type: 'select',
     option: statusOptions,
   },
+];
+
+export const tierFields: Field<Tier>[] = [
+  { name: 'ID', key: 'id', type: 'text' },
+  { name: 'Name', key: 'name', type: 'text' },
+  { name: 'Required points', key: 'requiredPoints', type: 'number' },
+];
+
+export const actionLogFields: Field<ActionLog>[] = [
+  { name: 'ID', key: 'id', type: 'text' },
+  { name: 'User Id', key: 'userId', type: 'number' },
+  { name: 'Action', key: 'action', type: 'text' },
+  { name: 'Timestamp', key: 'timestamp', type: 'text' },
+  { name: 'Is error', key: 'isError', type: 'boolean' },
 ];

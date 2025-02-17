@@ -11,6 +11,7 @@ import Swal from 'sweetalert2';
 import { useMutation } from '@apollo/client';
 import { CREATE_PRODUCT, UPDATE_PRODUCT } from '@/graphql/products/mutation';
 import { GqlErrorMessage } from '@/types/error/types';
+import { useSession } from 'next-auth/react';
 
 const ProductFormModal: React.FC<ProductFormModalProps> = (
   {
@@ -19,6 +20,8 @@ const ProductFormModal: React.FC<ProductFormModalProps> = (
     editProduct,
   },
 ) => {
+  const { data: session } = useSession();
+  const adminToken = session?.accessToken;
 
   const isEditMode = Boolean(editProduct?.id);
 
@@ -37,6 +40,9 @@ const ProductFormModal: React.FC<ProductFormModalProps> = (
               ...formData,
             },
           },
+          context: {
+            headers: { 'authorization-admin': `Bearer ${adminToken}` },
+          },
         }).then(async () => {
           await Swal.fire({
             position: 'center',
@@ -54,6 +60,9 @@ const ProductFormModal: React.FC<ProductFormModalProps> = (
             input: {
               ...formData,
             },
+          },
+          context: {
+            headers: { 'authorization-admin': `Bearer ${adminToken}` },
           },
         }).then(async () => {
           await Swal.fire({

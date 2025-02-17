@@ -17,10 +17,11 @@ const CustomerViewModal: React.FC<CustomerViewModalProps> = (
 
   const data = customerData
     ? {
+      id: customerData.id,
       email: customerData.email,
       firstName: customerData.firstName,
       lastName: customerData.lastName,
-      countryCode: customerData.lastName,
+      countryCode: customerData.countryCode,
       phone: customerData.phone,
       status: customerData.status,
     } : {};
@@ -54,14 +55,15 @@ const CustomerViewModal: React.FC<CustomerViewModalProps> = (
               leaveTo="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
             >
               <Dialog.Panel
-                className="relative transform overflow-hidden w-full max-w-3xl rounded-lg bg-white px-4 pb-4 pt-5 text-left shadow-xl transition-all sm:my-8 sm:p-6">
+                className="relative transform overflow-hidden w-full max-w-3xl rounded-lg bg-white px-4 pb-4 pt-5 text-left shadow-xl transition-all sm:my-8 sm:p-6"
+              >
                 {/* Title */}
                 <div className="mb-4">
                   <Dialog.Title
                     as="h3"
                     className="text-lg font-semibold leading-6 text-gray-900"
                   >
-                    {customerData?.email}
+                    Customer Information
                   </Dialog.Title>
                 </div>
 

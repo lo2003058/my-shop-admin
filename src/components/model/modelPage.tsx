@@ -12,8 +12,12 @@ import { modelFields } from '@/config/tableFields';
 import PaginationButtons from '@/components/common/paginationButtons';
 import Swal from 'sweetalert2';
 import ModelFormModal from '@/components/model/form/modelFormModal';
+import { useSession } from 'next-auth/react';
 
 const ModelPage: React.FC = () => {
+  const { data: session } = useSession();
+
+  const adminToken = session?.accessToken;
 
   // For pagination & search
   const [page, setPage] = useState(1);
@@ -117,6 +121,9 @@ const ModelPage: React.FC = () => {
         if (result.isConfirmed) {
           await removeModel({
             variables: { id: item.id },
+            context: {
+              headers: { 'authorization-admin': `Bearer ${adminToken}` },
+            },
           })
             .then(async () => {
               await Swal.fire({

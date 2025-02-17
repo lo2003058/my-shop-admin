@@ -13,8 +13,13 @@ import { GqlErrorMessage } from '@/types/error/types';
 import { UPDATE_PRODUCT } from '@/graphql/products/mutation';
 import ProductViewModal from '@/components/product/view/productViewModal';
 import { productFields } from '@/config/tableFields';
+import { useSession } from 'next-auth/react';
 
 const TrashedProductPage: React.FC = () => {
+  const { data: session } = useSession();
+
+  const adminToken = session?.accessToken;
+
   // For pagination & search
   const [page, setPage] = useState(1);
   const [searchTerm, setSearchTerm] = useState('');
@@ -102,6 +107,9 @@ const TrashedProductPage: React.FC = () => {
             id: formData.id,
             isShow: true,
           },
+        },
+        context: {
+          headers: { 'authorization-admin': `Bearer ${adminToken}` },
         },
       }).then(async () => {
         await Swal.fire({

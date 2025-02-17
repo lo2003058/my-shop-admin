@@ -143,7 +143,7 @@ const CustomerForm: React.FC<CustomerFormProps> = (
           Status
         </label>
         <select
-          {...register('status', { required: 'Status is required' })}
+          {...register('status', { required: 'Status is required', valueAsNumber: true })}
           className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 text-black ${
             errors.status
               ? 'border-red-500 focus:ring-red-500'

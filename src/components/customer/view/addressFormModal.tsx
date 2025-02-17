@@ -1,95 +1,101 @@
+'use client';
+
 import React, { Fragment } from 'react';
-import { ModelFormData, ModelFormModalProps } from '@/types/model/types';
+import { Transition, Dialog } from '@headlessui/react';
 import { useMutation } from '@apollo/client';
-import { CREATE_MODEL, UPDATE_MODEL } from '@/graphql/model/mutation';
 import Swal from 'sweetalert2';
+
 import { GqlErrorMessage } from '@/types/error/types';
-import { Dialog, Transition } from '@headlessui/react';
+import { AddressFormData, EditAddressData } from '@/types/customer/types';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faXmark } from '@fortawesome/free-solid-svg-icons';
-import { usePathname } from 'next/navigation';
-import ModelForm from '@/components/model/form/modelForm';
-import _ from 'lodash';
-import { useSession } from 'next-auth/react';
+import AddressForm from '@/components/customer/view/addressForm';
+import { CREATE_CUSTOMER_ADDRESS, UPDATE_CUSTOMER_ADDRESS } from '@/graphql/Customer/queries';
 
-const ModelFormModal: React.FC<ModelFormModalProps> = (
+interface AddressFormModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  /** The ID of the customer who owns this address. */
+  customerId?: number;
+  /** Number of existing addresses. If 0 => isDefault is checked. */
+  existingAddressesCount?: number;
+  /** If editing an existing address, pass data. Otherwise, new. */
+  editAddress?: EditAddressData | null;
+}
+
+const AddressFormModal: React.FC<AddressFormModalProps> = (
   {
     isOpen,
     onClose,
-    editModel,
+    customerId,
+    existingAddressesCount = 0,
+    editAddress,
   },
 ) => {
-  const { data: session } = useSession();
-
-  const adminToken = session?.accessToken;
-
-  const rawPathname = usePathname();
-  const pathname = rawPathname.replace('/', '');
-
-  const isEditMode = Boolean(editModel?.id);
+  const isEditMode = Boolean(editAddress?.id);
 
   // Apollo Mutations
-  const [createModel] = useMutation(CREATE_MODEL);
-  const [updateModel] = useMutation(UPDATE_MODEL);
+  const [createCustomerAddress] = useMutation(CREATE_CUSTOMER_ADDRESS);
+  const [updateCustomerAddress] = useMutation(UPDATE_CUSTOMER_ADDRESS);
 
-  const handleSave = async (formData: ModelFormData) => {
+  // "onSave" is called by <AddressForm> upon final submission
+  const handleSave = async (formData: AddressFormData) => {
     try {
-      if (isEditMode && editModel?.id) {
+      if (isEditMode && editAddress?.id) {
         // Update
-        await updateModel({
+        await updateCustomerAddress({
           variables: {
             input: {
-              id: editModel.id,
+              id: editAddress.id,
+              customerId,
               ...formData,
             },
           },
-          context: {
-            headers: { 'authorization-admin': `Bearer ${adminToken}` },
-          },
-        }).then(async () => {
-          await Swal.fire({
-            position: 'center',
-            icon: 'success',
-            title: `${_.capitalize(pathname)} Updated Successfully`,
-            text: `Your ${pathname.toLowerCase()} has been updated.`,
-            showConfirmButton: false,
-            timer: 1500,
-          });
+        });
+
+        await Swal.fire({
+          position: 'center',
+          icon: 'success',
+          title: 'Address Updated Successfully',
+          text: 'Your address has been updated.',
+          showConfirmButton: false,
+          timer: 1500,
         });
       } else {
         // Create
-        await createModel({
+        await createCustomerAddress({
           variables: {
             input: {
+              customerId,
               ...formData,
             },
           },
-          context: {
-            headers: { 'authorization-admin': `Bearer ${adminToken}` },
-          },
-        }).then(async () => {
-          await Swal.fire({
-            position: 'center',
-            icon: 'success',
-            title: `${_.capitalize(pathname)} Created Successfully`,
-            text: `Your new ${pathname.toLowerCase()} has been added.`,
-            showConfirmButton: false,
-            timer: 1500,
-          });
+        });
+
+        await Swal.fire({
+          position: 'center',
+          icon: 'success',
+          title: 'Address Created Successfully',
+          text: 'Your new address has been added.',
+          showConfirmButton: false,
+          timer: 1500,
         });
       }
+
       onClose(); // close modal after success
     } catch (err: unknown) {
       const error = err as GqlErrorMessage;
+
       // Extract error message
       const errorMessage =
         error?.graphQLErrors?.[0]?.message ||
         error?.message ||
-        `Failed to save ${pathname.toLowerCase()}. Please try again.`;
+        'An error occurred while saving your address.';
+
       await Swal.fire({
         position: 'center',
         icon: 'error',
-        title: `${_.capitalize(pathname)} Save Error`,
+        title: 'Address Save Error',
         text: errorMessage,
         timer: 1500,
       });
@@ -97,14 +103,22 @@ const ModelFormModal: React.FC<ModelFormModalProps> = (
   };
 
   // Combine any existing data for the form
-  const initialData = editModel
+  const initialData = editAddress
     ? {
-      name: editModel.name,
-      apiUrl: editModel.apiUrl,
-      apiKey: editModel.apiKey,
-      isDefault: editModel.isDefault,
-      isShow: editModel.isShow,
-    } : {};
+      tag: editAddress.tag,
+      firstName: editAddress.firstName,
+      lastName: editAddress.lastName,
+      countryCode: editAddress.countryCode,
+      phone: editAddress.phone,
+      address: editAddress.address,
+      address2: editAddress.address2,
+      city: editAddress.city,
+      state: editAddress.state,
+      country: editAddress.country,
+      zipCode: editAddress.zipCode,
+      isDefault: editAddress.isDefault,
+    }
+    : {};
 
   return (
     <Transition show={isOpen} as={Fragment}>
@@ -142,19 +156,20 @@ const ModelFormModal: React.FC<ModelFormModalProps> = (
                     as="h3"
                     className="text-lg font-semibold leading-6 text-gray-900"
                   >
-                    {isEditMode ? `Edit ${_.capitalize(pathname)}` : `Add New ${_.capitalize(pathname)}`}
+                    {isEditMode ? 'Edit Address' : 'Add New Address'}
                   </Dialog.Title>
                   <p className="text-sm text-gray-500">
                     {isEditMode
                       ? 'Update the information below.'
-                      : `Fill in the details below to create a new ${pathname.toLowerCase()}.`}
+                      : 'Fill out the form to add a new address.'}
                   </p>
                 </div>
 
-                {/* Form */}
-                <ModelForm
+                {/* AddressForm */}
+                <AddressForm
                   onSave={handleSave}
                   initialData={initialData}
+                  existingCount={existingAddressesCount}
                   isEditMode={isEditMode}
                 />
 
@@ -179,4 +194,4 @@ const ModelFormModal: React.FC<ModelFormModalProps> = (
   );
 };
 
-export default ModelFormModal;
+export default AddressFormModal;
