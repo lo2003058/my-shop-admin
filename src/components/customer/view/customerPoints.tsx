@@ -1,6 +1,6 @@
 import React from 'react';
 import { CustomerViewProps } from '@/types/customer/types';
-import { GET_CUSTOMER_POINT } from '@/graphql/Customer/queries';
+import { GET_CUSTOMER_POINT } from '@/graphql/customer/queries';
 import { useQuery } from '@apollo/client';
 import LoadingComponent from '@/components/common/loadingComponent';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';

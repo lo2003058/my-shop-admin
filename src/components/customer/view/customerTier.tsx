@@ -1,12 +1,12 @@
 import React from 'react';
 import { CustomerViewProps } from '@/types/customer/types';
 import { useMutation, useQuery } from '@apollo/client';
-import { GET_CUSTOMER_TIER } from '@/graphql/Customer/queries';
+import { GET_CUSTOMER_TIER } from '@/graphql/customer/queries';
 import LoadingComponent from '@/components/common/loadingComponent';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faCrown } from '@fortawesome/free-solid-svg-icons';
 import CustomerTierForm from '@/components/customer/view/customerTierForm';
-import { UPDATE_CUSTOMER } from '@/graphql/Customer/mutation';
+import { UPDATE_CUSTOMER } from '@/graphql/customer/mutation';
 import Swal from 'sweetalert2';
 import { GET_TIERS } from '@/graphql/tier/queries';
 import { Tier } from '@/types/tier/types';
@@ -15,18 +15,17 @@ import { Tier } from '@/types/tier/types';
 const CustomerTier: React.FC<CustomerViewProps> = ({ customerData = {} }) => {
   const {
     data: customerTierData,
-    loading: customerTierloading,
+    loading: customerTierLoading,
     error: customerTierError,
     refetch,
   } = useQuery(GET_CUSTOMER_TIER, {
     variables: { id: customerData.id },
   });
-  const { data: tiersData, loading: tierloading, error: tierError } = useQuery(GET_TIERS);
-
+  const { data: tiersData, loading: tierLoading, error: tierError } = useQuery(GET_TIERS);
 
   const [updateCustomerTier] = useMutation(UPDATE_CUSTOMER);
 
-  if (customerTierloading || tierloading) return <LoadingComponent />;
+  if (customerTierLoading || tierLoading) return <LoadingComponent />;
   if (customerTierError) return <div>Error: {customerTierError.message}</div>;
   if (tierError) return <div>Error: {tierError.message}</div>;
 

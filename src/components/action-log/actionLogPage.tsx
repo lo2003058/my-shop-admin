@@ -8,9 +8,9 @@ import { actionLogFields } from '@/config/tableFields';
 import PaginationButtons from '@/components/common/paginationButtons';
 import { useSession } from 'next-auth/react';
 import { useQuery } from '@apollo/client';
-import { ActionLogData } from '@/types/action-log/types';
+import { ActionLog, ActionLogData } from '@/types/action-log/types';
 import { GET_ACTION_LOG_PAGINATED } from '@/graphql/action-log/queries';
-import LoadingComponent from '@/components/common/loadingComponent';
+import ActionLogViewModal from '@/components/action-log/view/actionLogViewModal';
 
 const ActionLogPage: React.FC = () => {
   const { data: session } = useSession();
@@ -19,12 +19,14 @@ const ActionLogPage: React.FC = () => {
   // For pagination & search
   const [page, setPage] = useState(1);
   const [searchTerm, setSearchTerm] = useState('');
+  const [isViewModalOpen, setViewModalOpen] = useState(false);
+  const [actionLogItem, setActionLogItem] = useState<ActionLog | null>(null);
 
   // Page size config
   const pageSize = 10;
 
   // GraphQL Query
-  const { data, loading, error, refetch } = useQuery<ActionLogData>(
+  const { data, error, refetch } = useQuery<ActionLogData>(
     GET_ACTION_LOG_PAGINATED,
     {
       variables: {
@@ -62,6 +64,11 @@ const ActionLogPage: React.FC = () => {
     setPage(1);
   };
 
+  const handleOpenModalForView = (data: ActionLog) => {
+    setActionLogItem(data);
+    setViewModalOpen(true);
+  };
+
   const goToNextPage = useCallback(() => {
     const totalPages = data?.paginatedActionLog?.totalPages ?? 1;
     if (page < totalPages) {
@@ -74,8 +81,6 @@ const ActionLogPage: React.FC = () => {
       refetchData(page - 1);
     }
   }, [page, refetchData]);
-
-  if (loading) return <LoadingComponent />;
 
   // If error, show it, but keep the table unmounted
   if (error) {
@@ -100,6 +105,7 @@ const ActionLogPage: React.FC = () => {
         data={actionLogs}
         fields={actionLogFields}
         onSearchChange={handleSearchChange}
+        onView={(item) => handleOpenModalForView(item)}
         isShowSearchBar
         actionType={['view']}
       />
@@ -108,6 +114,11 @@ const ActionLogPage: React.FC = () => {
         totalPages={totalPages}
         onPrevPage={goToPreviousPage}
         onNextPage={goToNextPage}
+      />
+      <ActionLogViewModal
+        isOpen={isViewModalOpen}
+        onClose={() => setViewModalOpen(false)}
+        actionLogData={actionLogItem}
       />
     </ContainersComponent>
   );

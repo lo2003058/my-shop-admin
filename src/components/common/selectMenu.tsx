@@ -30,16 +30,18 @@ export interface SelectMenuProps<T extends object, K extends keyof T = keyof T> 
   placeholder?: string;
 }
 
-function SelectMenu<T extends object, K extends keyof T = keyof T>({
-                                                                     items,
-                                                                     labelName,
-                                                                     labelValue,
-                                                                     secondaryLabel,
-                                                                     label,
-                                                                     value,
-                                                                     onChange,
-                                                                     placeholder = 'Select an option',
-                                                                   }: SelectMenuProps<T, K>) {
+function SelectMenu<T extends object, K extends keyof T = keyof T>(
+  {
+    items,
+    labelName,
+    labelValue,
+    secondaryLabel,
+    label,
+    value,
+    onChange,
+    placeholder = 'Select an option',
+  }: SelectMenuProps<T, K>,
+) {
   // Find the currently selected item by matching the provided value using the labelValue key.
   const selectedItem = items.find(item => item[labelValue] === value) ?? null;
 

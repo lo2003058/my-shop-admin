@@ -36,7 +36,6 @@ export const authOptions: NextAuthOptions = {
 
           const data = await response.json();
           // Return the user object that matches our extended User type
-          console.log('user data:', data);
           return {
             id: data.user.id,
             email: data.user.email,

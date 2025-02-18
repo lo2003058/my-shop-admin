@@ -4,13 +4,19 @@ import Tooltip from '@/components/common/tooltip';
 import { Button } from '@headlessui/react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faEye, faPen, faTrash, faTrashArrowUp } from '@fortawesome/free-solid-svg-icons';
+import moment from 'moment';
 
 /**
  * Represents the allowed types for each column/field.
  */
-export type ColumnType = 'text' | 'number' | 'image' | 'boolean' | 'select';
-
-export type ActionType = 'edit' | 'delete' | 'view' | 'restore';
+export type ColumnType =
+  | 'text'
+  | 'number'
+  | 'image'
+  | 'boolean'
+  | 'select'
+  | 'date'
+  | 'object';
 
 /**
  * Interface for select option mapping
@@ -26,11 +32,16 @@ export interface SelectOption {
 
 /**
  * The definition of a single column/field in the table.
+ * For the new types:
+ * - When type is "date", provide a `format` string (e.g. "DD-MM-YYYY" or "DD-MM-YYYY HH:mm:ss").
+ * - When type is "object", provide a `label` to specify which property in the object to display.
  */
 export interface Field<T> {
   name: string;
   key: keyof T;
   type: ColumnType;
+  format?: string; // For date type
+  label?: string; // For object type
   option?: SelectOption[]; // Optional map for select type
   defaultColors?: {
     background: string;
@@ -52,6 +63,8 @@ interface DataTableProps<T> {
   actionType?: ActionType[];
   isShowSearchBar?: boolean;
 }
+
+export type ActionType = 'edit' | 'delete' | 'view' | 'restore';
 
 /**
  * Utility function to combine CSS classes.
@@ -107,8 +120,27 @@ function renderCellValue<T>(field: Field<T>, value: T[keyof T]) {
         return String(value);
       }
       return String(value);
+    case 'date': {
+      // Use moment to format the date.
+      // If no value is provided, display a dash.
+      const dateFormat = field.format || 'DD-MM-YYYY';
+      return <span>{value ? moment(value).format(dateFormat) : '-'}</span>;
+    }
+    case 'object': {
+      // When the field type is object, extract the property indicated by `label`.
+      if (value && typeof value === 'object') {
+        if (field.label) {
+          const record = value as Record<string, unknown>;
+          const labelValue = record[field.label];
+          return <span>{labelValue !== undefined ? String(labelValue) : '-'}</span>;
+        }
+        // Fallback: if no label provided, show the JSON string.
+        return <span>{JSON.stringify(value)}</span>;
+      }
+      return <span>{value ? String(value) : '-'}</span>;
+    }
     default:
-      return <span>{String(value)}</span>;
+      return <span>{value ? String(value) : '-'}</span>;
   }
 }
 
@@ -157,13 +189,9 @@ export function DataTableComponent<T extends object>(
                 const firstThClasses = isFirst
                   ? classNames(
                     'border-l border-b border-gray-300 bg-white/75 px-3 py-3.5 text-left text-sm font-semibold text-gray-900 backdrop-blur backdrop-filter',
-                    // Scenario 1: isShowSearchBar = false, no actions
                     !isShowSearchBar && !hasActions && 'rounded-l-xl border-t',
-                    // Scenario 2: isShowSearchBar = false, with actions
                     !isShowSearchBar && hasActions && 'rounded-l-xl border-t',
-                    // Scenario 3: isShowSearchBar = true, no actions
                     isShowSearchBar && !hasActions && 'rounded-bl-xl',
-                    // Scenario 4: isShowSearchBar = true, with actions
                     isShowSearchBar && hasActions && 'rounded-bl-xl',
                   )
                   : '';
@@ -172,13 +200,9 @@ export function DataTableComponent<T extends object>(
                 const lastThClasses = isLast
                   ? classNames(
                     'border-b border-gray-300 bg-white/75 px-3 py-3.5 text-left text-sm font-semibold text-gray-900 backdrop-blur backdrop-filter',
-                    // Scenario 1: isShowSearchBar = false, no actions
                     !isShowSearchBar && !hasActions && 'border-r rounded-r-xl border-t',
-                    // Scenario 2: isShowSearchBar = false, with actions
                     !isShowSearchBar && hasActions && 'border-t',
-                    // Scenario 3: isShowSearchBar = true, no actions
                     isShowSearchBar && !hasActions && 'border-r rounded-br-xl',
-                    // Scenario 4: isShowSearchBar = true, with actions
                     isShowSearchBar && hasActions && '',
                   )
                   : '';

@@ -14,6 +14,10 @@ export const GET_ACTION_LOG_PAGINATED = gql`
                     id
                     email
                     username
+                    role {
+                        id
+                        name
+                    }
                 }
             }
             totalCount

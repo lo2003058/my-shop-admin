@@ -12,6 +12,8 @@ import { useMutation } from '@apollo/client';
 import { CREATE_PRODUCT, UPDATE_PRODUCT } from '@/graphql/products/mutation';
 import { GqlErrorMessage } from '@/types/error/types';
 import { useSession } from 'next-auth/react';
+import _ from 'lodash';
+import { usePathname } from 'next/navigation';
 
 const ProductFormModal: React.FC<ProductFormModalProps> = (
   {
@@ -22,6 +24,9 @@ const ProductFormModal: React.FC<ProductFormModalProps> = (
 ) => {
   const { data: session } = useSession();
   const adminToken = session?.accessToken;
+
+  const rawPathname = usePathname();
+  const pathname = rawPathname.replace('/', '');
 
   const isEditMode = Boolean(editProduct?.id);
 
@@ -47,8 +52,8 @@ const ProductFormModal: React.FC<ProductFormModalProps> = (
           await Swal.fire({
             position: 'center',
             icon: 'success',
-            title: 'Product Updated Successfully',
-            text: 'Your product has been updated.',
+            title: `${_.capitalize(pathname)} Updated Successfully`,
+            text: `Your ${pathname.toLowerCase()} has been updated.`,
             showConfirmButton: false,
             timer: 1500,
           });
@@ -68,8 +73,8 @@ const ProductFormModal: React.FC<ProductFormModalProps> = (
           await Swal.fire({
             position: 'center',
             icon: 'success',
-            title: 'Product Created Successfully',
-            text: 'Your new product has been added.',
+            title: `${_.capitalize(pathname)} Created Successfully`,
+            text: `Your new ${pathname.toLowerCase()} has been added.`,
             showConfirmButton: false,
             timer: 1500,
           });

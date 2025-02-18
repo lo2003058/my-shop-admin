@@ -6,7 +6,7 @@ import { faXmark } from '@fortawesome/free-solid-svg-icons';
 import { useMutation } from '@apollo/client';
 import Swal from 'sweetalert2';
 import { GqlErrorMessage } from '@/types/error/types';
-import { CREATE_CUSTOMER, UPDATE_CUSTOMER } from '@/graphql/Customer/mutation';
+import { CREATE_CUSTOMER, UPDATE_CUSTOMER } from '@/graphql/customer/mutation';
 import { usePathname } from 'next/navigation';
 import _ from 'lodash';
 import CustomerForm from '@/components/customer/form/customerForm';

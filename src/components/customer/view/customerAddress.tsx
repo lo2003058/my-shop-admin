@@ -5,7 +5,7 @@ import {
   GET_CUSTOMER_ADDRESSES,
   UPDATE_CUSTOMER_DEFAULT_ADDRESS,
   REMOVE_CUSTOMER_ADDRESS,
-} from '@/graphql/Customer/queries';
+} from '@/graphql/customer/queries';
 import LoadingComponent from '@/components/common/loadingComponent';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faMapMarkerAlt, faMapPin, faPen, faPhone, faTrash } from '@fortawesome/free-solid-svg-icons';

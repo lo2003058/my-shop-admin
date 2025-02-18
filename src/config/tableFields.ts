@@ -4,6 +4,7 @@ import { Model } from '@/types/model/types';
 import { Customer } from '@/types/customer/types';
 import { Tier } from '@/types/tier/types';
 import { ActionLog } from '@/types/action-log/types';
+import { User } from '@/types/user/types';
 
 export const productFields: Field<Product>[] = [
   { name: 'ID', key: 'id', type: 'text' },
@@ -64,8 +65,17 @@ export const tierFields: Field<Tier>[] = [
 
 export const actionLogFields: Field<ActionLog>[] = [
   { name: 'ID', key: 'id', type: 'text' },
-  { name: 'User Id', key: 'userId', type: 'number' },
+  { name: 'User', key: 'user', type: 'object', label: 'username' },
   { name: 'Action', key: 'action', type: 'text' },
-  { name: 'Timestamp', key: 'timestamp', type: 'text' },
+  { name: 'Timestamp', key: 'timestamp', type: 'date', format: 'MM-DD-YYYY HH:mm:ss' },
   { name: 'Is error', key: 'isError', type: 'boolean' },
+];
+
+export const userFields: Field<User>[] = [
+  { name: 'ID', key: 'id', type: 'text' },
+  { name: 'Email', key: 'email', type: 'text' },
+  { name: 'First Name', key: 'firstName', type: 'text' },
+  { name: 'Last Name', key: 'lastName', type: 'text' },
+  { name: 'Username', key: 'username', type: 'text' },
+  { name: 'Role', key: 'role', type: 'object', label: 'name' },
 ];

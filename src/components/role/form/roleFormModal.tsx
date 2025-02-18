@@ -1,101 +1,94 @@
-'use client';
-
 import React, { Fragment } from 'react';
-import { Transition, Dialog } from '@headlessui/react';
+import { RoleFormData, RoleFormModalProps } from '@/types/role/types';
+import { useSession } from 'next-auth/react';
+import { usePathname } from 'next/navigation';
 import { useMutation } from '@apollo/client';
 import Swal from 'sweetalert2';
-
+import _ from 'lodash';
 import { GqlErrorMessage } from '@/types/error/types';
-import { AddressFormData, EditAddressData } from '@/types/customer/types';
+import { Dialog, Transition } from '@headlessui/react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faXmark } from '@fortawesome/free-solid-svg-icons';
-import AddressForm from '@/components/customer/view/addressForm';
-import { CREATE_CUSTOMER_ADDRESS, UPDATE_CUSTOMER_ADDRESS } from '@/graphql/customer/queries';
+import { CREATE_ROLE, UPDATE_ROLE } from '@/graphql/role/mutation';
+import RoleForm from '@/components/role/form/roleForm';
 
-interface AddressFormModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-  /** The ID of the customer who owns this address. */
-  customerId?: number;
-  /** Number of existing addresses. If 0 => isDefault is checked. */
-  existingAddressesCount?: number;
-  /** If editing an existing address, pass data. Otherwise, new. */
-  editAddress?: EditAddressData | null;
-}
-
-const AddressFormModal: React.FC<AddressFormModalProps> = (
+const RoleFormModal: React.FC<RoleFormModalProps> = (
   {
     isOpen,
     onClose,
-    customerId,
-    existingAddressesCount = 0,
-    editAddress,
+    editRole,
   },
 ) => {
-  const isEditMode = Boolean(editAddress?.id);
+  const { data: session } = useSession();
 
-  // Apollo Mutations
-  const [createCustomerAddress] = useMutation(CREATE_CUSTOMER_ADDRESS);
-  const [updateCustomerAddress] = useMutation(UPDATE_CUSTOMER_ADDRESS);
+  const adminToken = session?.accessToken;
 
-  // "onSave" is called by <AddressForm> upon final submission
-  const handleSave = async (formData: AddressFormData) => {
+  const rawPathname = usePathname();
+  const pathname = rawPathname.replace('/', '');
+
+  const isEditMode = Boolean(editRole?.id);
+
+  const [createRole] = useMutation(CREATE_ROLE);
+  const [updateRole] = useMutation(UPDATE_ROLE);
+
+  const handleSave = async (formData: RoleFormData) => {
     try {
-      if (isEditMode && editAddress?.id) {
+      if (isEditMode && editRole?.id) {
         // Update
-        await updateCustomerAddress({
+        await updateRole({
           variables: {
             input: {
-              id: editAddress.id,
-              customerId,
+              id: editRole.id,
               ...formData,
             },
           },
+          context: {
+            headers: { 'authorization-admin': `Bearer ${adminToken}` },
+          },
+        }).then(async () => {
+          await Swal.fire({
+            position: 'center',
+            icon: 'success',
+            title: `${_.capitalize(pathname)} Updated Successfully`,
+            text: `Your ${pathname.toLowerCase()} has been updated.`,
+            showConfirmButton: false,
+            timer: 1500,
+          });
         });
-
-        await Swal.fire({
-          position: 'center',
-          icon: 'success',
-          title: 'Address Updated Successfully',
-          text: 'Your address has been updated.',
-          showConfirmButton: false,
-          timer: 1500,
-        });
-      } else {
+      }else {
         // Create
-        await createCustomerAddress({
+        await createRole({
           variables: {
             input: {
-              customerId,
               ...formData,
             },
           },
-        });
-
-        await Swal.fire({
-          position: 'center',
-          icon: 'success',
-          title: 'Address Created Successfully',
-          text: 'Your new address has been added.',
-          showConfirmButton: false,
-          timer: 1500,
+          context: {
+            headers: { 'authorization-admin': `Bearer ${adminToken}` },
+          },
+        }).then(async () => {
+          await Swal.fire({
+            position: 'center',
+            icon: 'success',
+            title: `${_.capitalize(pathname)} Created Successfully`,
+            text: `Your new ${pathname.toLowerCase()} has been added.`,
+            showConfirmButton: false,
+            timer: 1500,
+          });
         });
       }
-
       onClose(); // close modal after success
     } catch (err: unknown) {
       const error = err as GqlErrorMessage;
-
       // Extract error message
       const errorMessage =
         error?.graphQLErrors?.[0]?.message ||
         error?.message ||
-        'An error occurred while saving your address.';
-
+        `Failed to save ${pathname.toLowerCase()}. Please try again.`;
       await Swal.fire({
         position: 'center',
         icon: 'error',
-        title: 'Address Save Error',
+        title: `${_.capitalize(pathname)} Save Error`,
         text: errorMessage,
         timer: 1500,
       });
@@ -103,22 +96,11 @@ const AddressFormModal: React.FC<AddressFormModalProps> = (
   };
 
   // Combine any existing data for the form
-  const initialData = editAddress
+  const initialData = editRole
     ? {
-      tag: editAddress.tag,
-      firstName: editAddress.firstName,
-      lastName: editAddress.lastName,
-      countryCode: editAddress.countryCode,
-      phone: editAddress.phone,
-      address: editAddress.address,
-      address2: editAddress.address2,
-      city: editAddress.city,
-      state: editAddress.state,
-      country: editAddress.country,
-      zipCode: editAddress.zipCode,
-      isDefault: editAddress.isDefault,
-    }
-    : {};
+      name: editRole.name,
+      permissions: editRole.permissions,
+    } : {};
 
   return (
     <Transition show={isOpen} as={Fragment}>
@@ -156,20 +138,19 @@ const AddressFormModal: React.FC<AddressFormModalProps> = (
                     as="h3"
                     className="text-lg font-semibold leading-6 text-gray-900"
                   >
-                    {isEditMode ? 'Edit Address' : 'Add New Address'}
+                    {isEditMode ? `Edit ${_.capitalize(pathname)}` : `Add New ${_.capitalize(pathname)}`}
                   </Dialog.Title>
                   <p className="text-sm text-gray-500">
                     {isEditMode
                       ? 'Update the information below.'
-                      : 'Fill out the form to add a new address.'}
+                      : `Fill in the details below to create a new ${pathname.toLowerCase()}.`}
                   </p>
                 </div>
 
-                {/* AddressForm */}
-                <AddressForm
+                {/* Form */}
+                <RoleForm
                   onSave={handleSave}
                   initialData={initialData}
-                  existingCount={existingAddressesCount}
                   isEditMode={isEditMode}
                 />
 
@@ -192,6 +173,8 @@ const AddressFormModal: React.FC<AddressFormModalProps> = (
       </Dialog>
     </Transition>
   );
+
+
 };
 
-export default AddressFormModal;
+export default RoleFormModal;

@@ -9,14 +9,9 @@ import { useQuery } from '@apollo/client';
 import { Tier, TiersData } from '@/types/tier/types';
 import { GET_TIERS } from '@/graphql/tier/queries';
 import LoadingComponent from '@/components/common/loadingComponent';
-import { useSession } from 'next-auth/react';
 import TierFormModal from '@/components/tier/form/tierFormModal';
 
 const TierPage: React.FC = () => {
-  const { data: session } = useSession();
-
-  const adminToken = session?.accessToken;
-
   const [isModalOpen, setModalOpen] = useState(false);
   const [editTier, setEditTier] = useState<Tier | null>(null);
 

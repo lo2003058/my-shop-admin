@@ -19,3 +19,13 @@ export interface ActionLogData {
     totalPages: number;
   };
 }
+
+export interface ActionLogViewModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  actionLogData?: ActionLog | null;
+}
+
+export interface ActionLogViewProps {
+  actionLogData?: Partial<ActionLog>;
+}
