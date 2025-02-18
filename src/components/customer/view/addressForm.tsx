@@ -195,7 +195,7 @@ const AddressForm: React.FC<AddressFormProps> = (
     register('countryCode', {
       validate: (val) => (val !== null ? true : 'Country code is required'),
     });
-  }, [isLoaded, setValue]);
+  }, [isLoaded, register, setValue]);
 
   /**
    * On submit, we stringify the CountryCodeObject

@@ -1,6 +1,6 @@
 import React from "react";
 import { Metadata } from "next";
-import DashboardPage from '@/components/main/dashboardPage';
+// import DashboardPage from '@/components/main/dashboardPage';
 import DashboardPageDemo from '@/components/main/dashboardPageDemo';
 
 export const metadata: Metadata = {
