@@ -18,8 +18,8 @@ import { useSession } from 'next-auth/react';
 
 
 const CustomerAddress: React.FC<CustomerViewProps> = ({ customerData = {} }) => {
-
-  const { data: session, status } = useSession();
+  const { data: session } = useSession();
+  const adminToken = session?.accessToken;
 
   const [isModalOpen, setModalOpen] = useState(false);
 
@@ -52,7 +52,6 @@ const CustomerAddress: React.FC<CustomerViewProps> = ({ customerData = {} }) => 
   };
 
   const handleUpdateDefaultAddress = async (addressId: number) => {
-    const adminToken = session?.accessToken;
     try {
       await updateCustomerDefaultAddress({
         variables: {
@@ -112,6 +111,9 @@ const CustomerAddress: React.FC<CustomerViewProps> = ({ customerData = {} }) => 
             variables: {
               id: addressId,
             },
+            context: {
+              headers: { 'authorization-admin': `Bearer ${adminToken}` },
+            },
           })
             .then(async () => {
               await Swal.fire({
@@ -148,7 +150,7 @@ const CustomerAddress: React.FC<CustomerViewProps> = ({ customerData = {} }) => 
     }
   };
 
-  if (loading || status === 'loading') return <LoadingComponent />;
+  if (loading) return <LoadingComponent />;
 
   if (error) return <p>Error: {error.message}</p>;
 

@@ -10,9 +10,13 @@ import { UPDATE_CUSTOMER } from '@/graphql/customer/mutation';
 import Swal from 'sweetalert2';
 import { GET_TIERS } from '@/graphql/tier/queries';
 import { Tier } from '@/types/tier/types';
+import { useSession } from 'next-auth/react';
 
 
 const CustomerTier: React.FC<CustomerViewProps> = ({ customerData = {} }) => {
+  const { data: session } = useSession();
+  const adminToken = session?.accessToken;
+
   const {
     data: customerTierData,
     loading: customerTierLoading,
@@ -37,6 +41,9 @@ const CustomerTier: React.FC<CustomerViewProps> = ({ customerData = {} }) => {
           id: customerData.id,
           tierId: tierId,
         },
+      },
+      context: {
+        headers: { 'authorization-admin': `Bearer ${adminToken}` },
       },
     }).then(async () => {
       await Swal.fire({
