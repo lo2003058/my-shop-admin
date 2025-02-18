@@ -137,10 +137,10 @@ function renderCellValue<T>(field: Field<T>, value: T[keyof T]) {
         // Fallback: if no label provided, show the JSON string.
         return <span>{JSON.stringify(value)}</span>;
       }
-      return <span>{value ? String(value) : '-'}</span>;
+      return <span>{value !== undefined ? String(value) : '-'}</span>;
     }
     default:
-      return <span>{value ? String(value) : '-'}</span>;
+      return <span>{value !== undefined ? String(value) : '-'}</span>;
   }
 }
 
