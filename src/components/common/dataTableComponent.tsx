@@ -5,6 +5,9 @@ import { Button } from '@headlessui/react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faEye, faPen, faTrash, faTrashArrowUp } from '@fortawesome/free-solid-svg-icons';
 import moment from 'moment';
+import { useSession } from 'next-auth/react';
+import { usePathname } from 'next/navigation';
+import { hasPermission } from '@/utils/permissionChecker';
 
 /**
  * Represents the allowed types for each column/field.
@@ -22,7 +25,7 @@ export type ColumnType =
  * Interface for select option mapping
  */
 export interface SelectOption {
-  key: number;
+  key: number | string;
   value: string;
   color?: {
     background: string;
@@ -47,6 +50,9 @@ export interface Field<T> {
     background: string;
     text: string;
   };
+  prefix?: string; // Optional prefix for number type
+  suffix?: string; // Optional suffix for number type
+  textCase?: 'uppercase' | 'lowercase' | 'capitalize'; // Optional text case for text type
 }
 
 /**
@@ -121,23 +127,45 @@ function renderCellValue<T>(field: Field<T>, value: T[keyof T]) {
       }
       return String(value);
     case 'date': {
-      // Use moment to format the date.
-      // If no value is provided, display a dash.
       const dateFormat = field.format || 'DD-MM-YYYY';
       return <span>{value ? moment(value).format(dateFormat) : '-'}</span>;
     }
     case 'object': {
-      // When the field type is object, extract the property indicated by `label`.
       if (value && typeof value === 'object') {
         if (field.label) {
           const record = value as Record<string, unknown>;
           const labelValue = record[field.label];
-          return <span>{labelValue !== undefined ? String(labelValue) : '-'}</span>;
+          return (
+            <span className={field.textCase ? field.textCase : ''}>
+              {labelValue !== undefined ? String(labelValue) : '-'}
+            </span>
+          );
         }
-        // Fallback: if no label provided, show the JSON string.
-        return <span>{JSON.stringify(value)}</span>;
+        return (
+          <span className={field.textCase ? field.textCase : ''}>
+            {JSON.stringify(value)}
+          </span>
+        );
       }
-      return <span>{value !== undefined ? String(value) : '-'}</span>;
+      return (
+        <span className={field.textCase ? field.textCase : ''}>
+          {value !== undefined ? String(value) : '-'}
+        </span>
+      );
+    }
+    case 'number': {
+      const numberValue = value !== undefined ? String(value) : '-';
+      return (
+        <span>
+          {field.prefix && <span>{field.prefix}</span>}
+          {numberValue}
+          {field.suffix && <span>{field.suffix}</span>}
+        </span>
+      );
+    }
+    case 'text': {
+      const textValue = value !== undefined ? String(value) : '-';
+      return <span className={field.textCase ? field.textCase : ''}>{textValue}</span>;
     }
     default:
       return <span>{value !== undefined ? String(value) : '-'}</span>;
@@ -160,10 +188,15 @@ export function DataTableComponent<T extends object>(
     isShowSearchBar = true,
   }: DataTableProps<T>,
 ) {
+  const { data: session } = useSession();
   const hasActions = actionType.length > 0;
+  const pathname = usePathname().split('/')[1];
+
+  // Get user permissions from the session.
+  const userPermissions: string[] = session?.user?.role?.permissions || [];
 
   return (
-    <div className="py-6">
+    <div className="py-2">
       {/* Search bar (full width) */}
       {isShowSearchBar && (
         <input
@@ -270,7 +303,7 @@ export function DataTableComponent<T extends object>(
                           'relative whitespace-nowrap px-3 py-4 text-left text-sm font-medium',
                         )}
                       >
-                        {actionType.includes('view') && (
+                        {actionType.includes('view') && hasPermission(userPermissions, pathname, 'read') && (
                           <Tooltip text="View" position="bottom">
                             <div
                               className="flex items-center justify-center h-10 w-10 rounded-full hover:bg-gray-100 cursor-pointer"
@@ -282,7 +315,7 @@ export function DataTableComponent<T extends object>(
                             </div>
                           </Tooltip>
                         )}
-                        {actionType.includes('edit') && (
+                        {actionType.includes('edit') && hasPermission(userPermissions, pathname, 'update') && (
                           <Tooltip text="Edit" position="bottom">
                             <div
                               className="flex items-center justify-center h-10 w-10 rounded-full hover:bg-gray-100 cursor-pointer"
@@ -294,7 +327,7 @@ export function DataTableComponent<T extends object>(
                             </div>
                           </Tooltip>
                         )}
-                        {actionType.includes('delete') && (
+                        {actionType.includes('delete') && hasPermission(userPermissions, pathname, 'delete') && (
                           <Tooltip text="Delete" position="bottom">
                             <div
                               className="flex items-center justify-center h-10 w-10 rounded-full hover:bg-gray-100 cursor-pointer"
@@ -306,7 +339,7 @@ export function DataTableComponent<T extends object>(
                             </div>
                           </Tooltip>
                         )}
-                        {actionType.includes('restore') && (
+                        {actionType.includes('restore') && hasPermission(userPermissions, pathname, 'delete') && (
                           <Tooltip text="Restore" position="bottom">
                             <div
                               className="flex items-center justify-center h-10 w-10 rounded-full hover:bg-gray-100 cursor-pointer"

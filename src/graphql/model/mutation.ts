@@ -7,6 +7,7 @@ export const CREATE_MODEL = gql`
             name
             apiUrl
             apiKey
+            defaultPrompt
             isDefault
             isShow
         }
@@ -20,6 +21,7 @@ export const UPDATE_MODEL = gql`
             name
             apiUrl
             apiKey
+            defaultPrompt
             isDefault
             isShow
         }

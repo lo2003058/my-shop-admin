@@ -3,11 +3,16 @@ export interface Model {
   name: string;
   apiUrl: string;
   apiKey: string;
+  defaultPrompt: string;
   isDefault: boolean;
   isShow: boolean;
 }
 
 export interface ModelsData {
+  models: Model[];
+}
+
+export interface PaginatedModelsData {
   paginatedModel: {
     items: Model[];
     totalCount: number;
@@ -21,6 +26,7 @@ export interface ModelFormData {
   name: string;
   apiUrl: string;
   apiKey: string;
+  defaultPrompt: string;
   isDefault: boolean;
   isShow: boolean;
 }

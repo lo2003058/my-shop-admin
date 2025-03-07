@@ -103,6 +103,7 @@ const ModelFormModal: React.FC<ModelFormModalProps> = (
       apiUrl: editModel.apiUrl,
       apiKey: editModel.apiKey,
       isDefault: editModel.isDefault,
+      defaultPrompt: editModel.defaultPrompt,
       isShow: editModel.isShow,
     } : {};
 

@@ -152,7 +152,7 @@ const CustomerAddress: React.FC<CustomerViewProps> = ({ customerData = {} }) => 
 
   if (loading) return <LoadingComponent />;
 
-  if (error) return <p>Error: {error.message}</p>;
+  if (error) return <p className={`text-gray-700`}>Error: {error.message}</p>;
 
   const customerAddress = data?.customerAddress;
 

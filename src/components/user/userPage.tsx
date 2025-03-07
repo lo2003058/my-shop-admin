@@ -124,7 +124,6 @@ const UserPage: React.FC = () => {
     );
   };
 
-
   const goToNextPage = useCallback(() => {
     const totalPages = data?.paginatedUsers?.totalPages ?? 1;
     if (page < totalPages) {

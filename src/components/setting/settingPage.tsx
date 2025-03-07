@@ -1,15 +1,22 @@
 'use client';
 
 import React from 'react';
+import TitleComponent from '@/components/common/titleComponent';
+import ContainersComponent from '@/components/common/containersComponent';
 
 const SettingPage: React.FC = () => {
 
   return (
-    <div className="bg-white h-screen">
-      <div className="mx-auto max-w-7xl pt-16 lg:flex lg:gap-x-16 lg:px-8">
-        this is setting page
+    <ContainersComponent>
+      <TitleComponent
+        title="Setting"
+        routeName="setting"
+      />
+
+      <div className={`text-sm font-medium text-gray-500 capitalize my-4`}>
+        Not implemented yet
       </div>
-    </div>
+    </ContainersComponent>
   );
 };
 

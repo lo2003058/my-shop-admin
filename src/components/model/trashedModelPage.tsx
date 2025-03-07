@@ -9,11 +9,15 @@ import { useMutation, useQuery } from '@apollo/client';
 import Swal from 'sweetalert2';
 import { GqlErrorMessage } from '@/types/error/types';
 import { modelFields } from '@/config/tableFields';
-import { Model, ModelsData } from '@/types/model/types';
+import { Model, PaginatedModelsData } from '@/types/model/types';
 import { GET_MODELS_PAGINATED } from '@/graphql/model/queries';
 import { UPDATE_MODEL } from '@/graphql/model/mutation';
+import { useSession } from 'next-auth/react';
 
 const TrashedModelPage: React.FC = () => {
+  const { data: session } = useSession();
+  const adminToken = session?.accessToken;
+
   // For pagination & search
   const [page, setPage] = useState(1);
   const [searchTerm, setSearchTerm] = useState('');
@@ -22,7 +26,7 @@ const TrashedModelPage: React.FC = () => {
   const pageSize = 10;
 
   // GraphQL Query
-  const { data, error, refetch } = useQuery<ModelsData>(
+  const { data, error, refetch } = useQuery<PaginatedModelsData>(
     GET_MODELS_PAGINATED,
     {
       variables: {
@@ -94,6 +98,9 @@ const TrashedModelPage: React.FC = () => {
             id: formData.id,
             isShow: true,
           },
+        },
+        context: {
+          headers: { 'authorization-admin': `Bearer ${adminToken}` },
         },
       }).then(async () => {
         await Swal.fire({

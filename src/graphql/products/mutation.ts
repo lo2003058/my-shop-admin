@@ -35,3 +35,9 @@ export const REMOVE_PRODUCT = gql`
         }
     }
 `;
+
+export const GENERATE_PRODUCT_DESCRIPTION = gql`
+    mutation GenerateProductDescription($input: GenerateProductDescriptionInput!) {
+        generateProductDescription(generateProductDescriptionInput: $input)
+    }
+`;

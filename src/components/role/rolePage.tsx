@@ -12,8 +12,17 @@ import Tooltip from '@/components/common/tooltip';
 import { Button } from '@headlessui/react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faPen } from '@fortawesome/free-solid-svg-icons';
+import { hasPermission } from '@/utils/permissionChecker';
+import { useSession } from 'next-auth/react';
+import { usePathname } from 'next/navigation';
 
 const RolePage: React.FC = () => {
+  const { data: session } = useSession();
+
+  // Get user permissions from the session.
+  const userPermissions: string[] = session?.user?.role?.permissions || [];
+
+  const pathname = usePathname().replace('/', '');
 
   const [isModalOpen, setModalOpen] = useState(false);
   const [editRole, setEditRole] = useState<Role | null>(null);
@@ -65,16 +74,20 @@ const RolePage: React.FC = () => {
           >
             <div className="px-4 py-5 sm:px-6 flex justify-between items-center">
               <div className="text-lg font-semibold">{role.name}</div>
-              <Tooltip text="Edit" position="bottom">
-                <div
-                  className="flex items-center justify-center h-8 w-8 rounded-full hover:bg-gray-100 cursor-pointer"
-                  onClick={() => handleOpenModalForEdit(role)}
-                >
-                  <Button className="text-black hover:bg-gray-100 hover:text-gray-700">
-                    <FontAwesomeIcon icon={faPen} />
-                  </Button>
-                </div>
-              </Tooltip>
+              {
+                hasPermission(userPermissions, pathname, 'update') && (
+                  <Tooltip text="Edit" position="bottom">
+                    <div
+                      className="flex items-center justify-center h-8 w-8 rounded-full hover:bg-gray-100 cursor-pointer"
+                      onClick={() => handleOpenModalForEdit(role)}
+                    >
+                      <Button className="text-black hover:bg-gray-100 hover:text-gray-700">
+                        <FontAwesomeIcon icon={faPen} />
+                      </Button>
+                    </div>
+                  </Tooltip>
+                )
+              }
             </div>
             <div className="px-4 py-5 sm:p-6">
               <div className="flex flex-wrap gap-2">

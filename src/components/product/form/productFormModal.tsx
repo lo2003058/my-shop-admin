@@ -24,9 +24,7 @@ const ProductFormModal: React.FC<ProductFormModalProps> = (
 ) => {
   const { data: session } = useSession();
   const adminToken = session?.accessToken;
-
-  const rawPathname = usePathname();
-  const pathname = rawPathname.replace('/', '');
+  const pathname = usePathname().split('/')[1];
 
   const isEditMode = Boolean(editProduct?.id);
 

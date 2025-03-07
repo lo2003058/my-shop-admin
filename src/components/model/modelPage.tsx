@@ -4,7 +4,7 @@ import React, { useCallback, useState } from 'react';
 import TitleComponent from '@/components/common/titleComponent';
 import ContainersComponent from '@/components/common/containersComponent';
 import { useMutation, useQuery } from '@apollo/client';
-import { Model, ModelsData } from '@/types/model/types';
+import { Model, PaginatedModelsData } from '@/types/model/types';
 import { GET_MODELS_PAGINATED } from '@/graphql/model/queries';
 import { REMOVE_MODEL } from '@/graphql/model/mutation';
 import { DataTableComponent } from '@/components/common/dataTableComponent';
@@ -29,7 +29,7 @@ const ModelPage: React.FC = () => {
   const pageSize = 10;
 
   // GraphQL Query
-  const { data, error, refetch } = useQuery<ModelsData>(
+  const { data, error, refetch } = useQuery<PaginatedModelsData>(
     GET_MODELS_PAGINATED,
     {
       variables: {

@@ -45,6 +45,52 @@ export const GET_CUSTOMER_POINT = gql`
     }
 `;
 
+export const GET_CUSTOMER_ORDERS = gql`
+    query GetCustomerOrders($id: Int!) {
+        customer(id: $id) {
+            order {
+                id
+                tax
+                shippingFee
+                originalTotal
+                total
+                status
+                pointsEarned
+                orderProduct {
+                    product {
+                        id
+                        name
+                        price
+                        stock
+                        isVirtual
+                        imageUrl
+                        createdAt
+                        updatedAt
+                    }
+                    quantity
+                }
+                orderAddress{
+                    name
+                    phone
+                    address
+                    address2
+                    city
+                    state
+                    country
+                    zipCode
+                }
+                payment {
+                    method
+                    status
+                    createdAt
+                }
+                createdAt
+                updatedAt
+            }
+        }
+    }
+`;
+
 export const GET_CUSTOMER_ADDRESSES = gql`
     query GetCustomerAddresses($customerId: Int!) {
         customerAddress(customerId: $customerId) {

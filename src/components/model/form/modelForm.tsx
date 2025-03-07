@@ -27,6 +27,7 @@ const ModelForm: React.FC<ModelFormProps> = (
       name: initialData.name || '',
       apiUrl: initialData.apiUrl || '',
       apiKey: initialData.apiKey || '',
+      defaultPrompt: initialData.defaultPrompt || '',
       isDefault: initialData.isDefault || false,
       isShow: initialData.isShow || true,
     },
@@ -64,6 +65,7 @@ const ModelForm: React.FC<ModelFormProps> = (
       name: formData.name,
       apiUrl: formData.apiUrl,
       apiKey: formData.apiKey,
+      defaultPrompt: formData.defaultPrompt,
       isDefault: formData.isDefault,
       isShow: formData.isShow,
     };
@@ -156,6 +158,25 @@ const ModelForm: React.FC<ModelFormProps> = (
 
       <div className="mb-4">
         <label className="block mb-1 text-md font-semibold text-gray-800">
+          Default prompt
+        </label>
+        <textarea
+          id="defaultPrompt"
+          rows={14}
+          {...register('defaultPrompt')}
+          className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 text-black resize-none ${
+            errors.defaultPrompt
+              ? 'border-red-500 focus:ring-red-500'
+              : 'border-gray-300 focus:ring-green-500'
+          }`}
+        />
+        {errors.defaultPrompt && (
+          <p className="text-red-500 text-sm mt-1">{errors.defaultPrompt.message}</p>
+        )}
+      </div>
+
+      <div className="mb-4">
+        <label className="block mb-1 text-md font-semibold text-gray-800">
           Is Default
         </label>
         <Controller
@@ -180,31 +201,31 @@ const ModelForm: React.FC<ModelFormProps> = (
         />
       </div>
 
-      <div className="mb-4">
-        <label className="block mb-1 text-md font-semibold text-gray-800">
-          Is Show
-        </label>
-        <Controller
-          control={control}
-          name="isShow"
-          render={({ field: { onChange, value } }) => (
-            <Switch
-              checked={value}
-              onChange={onChange}
-              className={`group relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 ${
-                value ? 'bg-indigo-600' : 'bg-gray-200'
-              }`}
-            >
-              <span
-                aria-hidden="true"
-                className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow transition duration-200 ease-in-out ${
-                  value ? 'translate-x-5' : 'translate-x-0'
-                }`}
-              />
-            </Switch>
-          )}
-        />
-      </div>
+      {/*<div className="mb-4">*/}
+      {/*  <label className="block mb-1 text-md font-semibold text-gray-800">*/}
+      {/*    Is Show*/}
+      {/*  </label>*/}
+      {/*  <Controller*/}
+      {/*    control={control}*/}
+      {/*    name="isShow"*/}
+      {/*    render={({ field: { onChange, value } }) => (*/}
+      {/*      <Switch*/}
+      {/*        checked={value}*/}
+      {/*        onChange={onChange}*/}
+      {/*        className={`group relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 ${*/}
+      {/*          value ? 'bg-indigo-600' : 'bg-gray-200'*/}
+      {/*        }`}*/}
+      {/*      >*/}
+      {/*        <span*/}
+      {/*          aria-hidden="true"*/}
+      {/*          className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow transition duration-200 ease-in-out ${*/}
+      {/*            value ? 'translate-x-5' : 'translate-x-0'*/}
+      {/*          }`}*/}
+      {/*        />*/}
+      {/*      </Switch>*/}
+      {/*    )}*/}
+      {/*  />*/}
+      {/*</div>*/}
 
       <div className="flex justify-end space-x-2">
         <button

@@ -79,3 +79,19 @@ export interface ProductFormProps {
   }>;
   isEditMode?: boolean;
 }
+
+export interface ProductAiFormModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  onReturn: (response: ProductAiFormResponse) => Promise<void> | void;
+  productData?: ProductFormData;
+}
+
+export interface ProductAiFormResponse {
+  response: string;
+}
+
+export interface ProductAiFormProps {
+  onReturn: (response: ProductAiFormResponse) => Promise<void> | void;
+  productData?: ProductFormData;
+}

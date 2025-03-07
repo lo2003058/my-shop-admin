@@ -5,6 +5,7 @@ import { Customer } from '@/types/customer/types';
 import { Tier } from '@/types/tier/types';
 import { ActionLog } from '@/types/action-log/types';
 import { User } from '@/types/user/types';
+import { Order } from '@/types/order/types';
 
 export const productFields: Field<Product>[] = [
   { name: 'ID', key: 'id', type: 'text' },
@@ -17,14 +18,13 @@ export const productFields: Field<Product>[] = [
 ];
 
 export const modelFields: Field<Model>[] = [
-  { name: 'ID', key: 'id', type: 'text' },
   { name: 'Name', key: 'name', type: 'text' },
   { name: 'API Url', key: 'apiUrl', type: 'text' },
   { name: 'Is default', key: 'isDefault', type: 'boolean' },
   { name: 'Is show', key: 'isShow', type: 'boolean' },
 ];
 
-const statusOptions: SelectOption[] = [
+const customerStatusOptions: SelectOption[] = [
   {
     key: 0,
     value: 'Active',
@@ -53,12 +53,11 @@ export const customerFields: Field<Customer>[] = [
     name: 'Status',
     key: 'status',
     type: 'select',
-    option: statusOptions,
+    option: customerStatusOptions,
   },
 ];
 
 export const tierFields: Field<Tier>[] = [
-  { name: 'ID', key: 'id', type: 'text' },
   { name: 'Name', key: 'name', type: 'text' },
   { name: 'Required points', key: 'requiredPoints', type: 'number' },
 ];
@@ -78,4 +77,16 @@ export const userFields: Field<User>[] = [
   { name: 'Last Name', key: 'lastName', type: 'text' },
   { name: 'Username', key: 'username', type: 'text' },
   { name: 'Role', key: 'role', type: 'object', label: 'name' },
+];
+
+export const orderFields: Field<Order>[] = [
+  { name: 'ID', key: 'id', type: 'text' },
+  { name: 'Customer email', key: 'customer', type: 'object', label: 'email' },
+  { name: 'Original total', key: 'originalTotal', type: 'number', prefix: '$' },
+  { name: 'Total', key: 'total', type: 'number', prefix: '$' },
+  { name: 'Tax', key: 'tax', type: 'number', prefix: '$' },
+  { name: 'Shipping fee', key: 'shippingFee', type: 'number', prefix: '$' },
+  { name: 'Points earned', key: 'pointsEarned', type: 'number'},
+  { name: 'Order status', key: 'status', type: 'text', textCase: 'capitalize' },
+  { name: 'Payment status', key: 'payment', type: 'object', label: 'status', textCase: 'capitalize' },
 ];
