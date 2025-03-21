@@ -1,36 +1,86 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# My Shop Admin Panel
+
+This is an admin panel for Yin.co built with Next.js, React, TypeScript, and Apollo Client.
+
+## Features
+
+- User management
+- Tier management
+- Authentication with NextAuth
+- Google Maps integration
+- Responsive UI using Tailwind CSS
+
+## Prerequisites
+
+- Node.js (v16 or later)
+- Yarn or npm
+- Backend API running on http://localhost:8080
 
 ## Getting Started
 
-First, run the development server:
+### Installation
+
+Clone the repository and install dependencies:
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+git clone <repository-url>
+cd my-shop-admin
+yarn install
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### Environment Variables
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Create a `.env.local` file in the root directory with the following variables:
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```
+NODE_ENV=development
+NEXTAUTH_SECRET=your-secret
+NEXTAUTH_URL=http://localhost:3001
+NEXT_PUBLIC_API_URL=http://localhost:8080
+NEXT_PUBLIC_GOOGLE_MAP_API_KEY=your-google-map-api-key
+```
 
-## Learn More
+### Development
 
-To learn more about Next.js, take a look at the following resources:
+Start the development server:
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```bash
+yarn dev-admin
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+The application will be available at http://localhost:3001
 
-## Deploy on Vercel
+### Build
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+Build the application for production:
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```bash
+yarn build-admin
+```
+
+### Linting
+
+Run ESLint:
+
+```bash
+yarn lint
+```
+
+## Project Structure
+
+- `/src/app`: Next.js app router pages and layouts
+- `/src/components`: React components
+- `/src/lib`: Utility functions and custom hooks
+
+## Dependencies
+
+- Next.js 15.1.6
+- React 19.0.0
+- Apollo Client 3.12.8
+- Tailwind CSS 3.4.1
+- NextAuth 4.24.11
+- HeadlessUI 2.2.0
+- React Hook Form 7.54.2
+- SweetAlert2 11.15.10
+- Google Maps API integration
+```
