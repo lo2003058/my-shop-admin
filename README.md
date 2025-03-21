@@ -83,4 +83,3 @@ yarn lint
 - React Hook Form 7.54.2
 - SweetAlert2 11.15.10
 - Google Maps API integration
-```
